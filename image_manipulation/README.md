@@ -1,0 +1,2 @@
+make
+./tut1 arch.jpeg
