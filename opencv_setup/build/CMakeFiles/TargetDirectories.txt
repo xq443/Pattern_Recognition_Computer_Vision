@@ -1,0 +1,3 @@
+/Users/cathyqin/Desktop/computer vision/opencv setup/build/CMakeFiles/MyProject.dir
+/Users/cathyqin/Desktop/computer vision/opencv setup/build/CMakeFiles/edit_cache.dir
+/Users/cathyqin/Desktop/computer vision/opencv setup/build/CMakeFiles/rebuild_cache.dir
