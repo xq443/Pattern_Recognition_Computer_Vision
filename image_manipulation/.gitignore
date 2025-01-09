@@ -4,6 +4,9 @@
 # Ignore all .tmp files
 *.tmp
 
+# Ignore all .o files
+*.o
+
 # Ignore node_modules folder
 node_modules/
 
