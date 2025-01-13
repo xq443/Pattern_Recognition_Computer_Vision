@@ -1,2 +1,2 @@
-- make
+- make tut1
 - ./tut1 arch.jpeg
