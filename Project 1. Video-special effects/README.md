@@ -1,2 +1,2 @@
-- make tut1
-- ./tut1 arch.jpeg
+- make vid
+- ./vid sample.mp4
