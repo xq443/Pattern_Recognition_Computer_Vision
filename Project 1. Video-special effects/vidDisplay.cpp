@@ -4,6 +4,7 @@
   CS 5330 OpenCV Project 1
  */
 #include "filter.h"
+#include "timeBlur.h" 
 #include <opencv2/opencv.hpp>
 #include <cstdio> // gives me printf
 #include <cstring> // gives me strcpy
@@ -42,7 +43,10 @@ int main(int argc, char** argv) {
     cv::Mat frame, dstframe;
     bool showGrayscale = false;
     bool showAlternativeGreyscale = false;
-    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale.\n";
+    bool showSepiaFilter = false;
+    bool applyBlur = false;
+
+    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur.\n";
 
     while (true) {
         cap >> frame; // Capture a new frame
@@ -63,6 +67,16 @@ int main(int argc, char** argv) {
                 break; 
             }
         }
+
+        if (showSepiaFilter) {
+            applySepiaTone(frame, dstframe);
+        }
+
+        if (applyBlur) {
+            blur5x5_2(frame, dstframe); 
+            //frame = dstframe.clone();   // Replace original frame with blurred one
+        }
+    
         cv::imshow("Video Display", frame);
 
 
@@ -86,8 +100,13 @@ int main(int argc, char** argv) {
         } else if (key == 'h') {
             showAlternativeGreyscale = !showAlternativeGreyscale;
             std::cout << "Alternative grayscale mode " << (showAlternativeGreyscale ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'e') { // sepia
+            showSepiaFilter = !showSepiaFilter;
+            std::cout << "SepiaFilter mode " << (showSepiaFilter ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'b') { // blurred version
+            applyBlur = !applyBlur;
+            std::cout << "Blur mode " << (applyBlur ? "enabled" : "disabled") << ".\n";
         }
-
     }
 
     // Release resources and close windows

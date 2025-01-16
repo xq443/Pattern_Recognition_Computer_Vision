@@ -1,3 +1,9 @@
+/*
+  Xujia Qin
+  January 14th 2025
+  CS 5330 OpenCV Project 1 task 4
+ */
+
 #ifndef FILTER_H
 #define FILTER_H
 
@@ -5,5 +11,6 @@
 
 void applyGrayscale(cv::Mat& img);
 int greyscale(cv::Mat &src, cv::Mat &dst);
+void applySepiaTone(cv::Mat &src, cv::Mat &dst);
 
 #endif
