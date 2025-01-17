@@ -40,13 +40,18 @@ int main(int argc, char** argv) {
     // Create a window to display the video
     cv::namedWindow("Video Display", cv::WINDOW_AUTOSIZE);
 
-    cv::Mat frame, dstframe;
+    cv::Mat frame, dstframe, sobelXFrame, sobelYFrame, absSobelX, absSobelY, magnitudeFrame, blurQuantizeFrame;
     bool showGrayscale = false;
     bool showAlternativeGreyscale = false;
     bool showSepiaFilter = false;
     bool applyBlur = false;
+    bool showSobelX = false;
+    bool showSobelY = false;
+    bool showMagnitude = false;
+    bool showBlurQuantize = false;
 
-    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur.\n";
+    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize.\n";
+
 
     while (true) {
         cap >> frame; // Capture a new frame
@@ -76,8 +81,26 @@ int main(int argc, char** argv) {
             blur5x5_2(frame, dstframe); 
             //frame = dstframe.clone();   // Replace original frame with blurred one
         }
-    
-        cv::imshow("Video Display", frame);
+
+        if (showSobelX) {
+            sobelX3x3(frame, sobelXFrame);
+            cv::convertScaleAbs(sobelXFrame, absSobelX);
+            cv::imshow("Video Display", absSobelX);
+        } else if (showSobelY) {
+            sobelY3x3(frame, sobelYFrame);
+            cv::convertScaleAbs(sobelYFrame, absSobelY);
+            cv::imshow("Video Display", absSobelY);
+        } else if (showMagnitude) {
+            sobelX3x3(frame, sobelXFrame);
+            sobelY3x3(frame, sobelYFrame);
+            magnitude(sobelXFrame, sobelYFrame, magnitudeFrame);
+            cv::imshow("Video Display", magnitudeFrame);
+        } else if (showBlurQuantize) {
+            blurQuantize(frame, blurQuantizeFrame, 10); // Default levels to 10
+            cv::imshow("Video Display", blurQuantizeFrame);
+        } else {
+            cv::imshow("Video Display", frame);
+        }
 
 
         // Check for key presses
@@ -88,11 +111,42 @@ int main(int argc, char** argv) {
             break;
         } else if (key == 's') {
             static int id = 0;
-            std::string outputPath = "saved_frame_" + std::to_string(id++) + ".jpg";
-            if (cv::imwrite(outputPath, frame)) {
-                std::cout << "Saved frame as " << outputPath << "\n";
+            std::string outputPath;
+            if (showSobelX) {
+                outputPath = "saved_sobelX_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, absSobelX)) {
+                    std::cout << "Saved Sobel X frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the Sobel X frame.\n";
+                }
+            } else if (showSobelY) {
+                outputPath = "saved_sobelY_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, absSobelY)) {
+                    std::cout << "Saved Sobel Y frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the Sobel Y frame.\n";
+                }
+            } else if (showMagnitude) {
+                outputPath = "saved_magnitude_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, magnitudeFrame)) {
+                    std::cout << "Saved gradient magnitude frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the gradient magnitude frame.\n";
+                }
+            } else if (showBlurQuantize) {
+                outputPath = "saved_blurquantize_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, blurQuantizeFrame)) {
+                    std::cout << "Saved blur quantize frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the blur quantize frame.\n";
+                }
             } else {
-                std::cerr << "Error: Could not save the frame.\n";
+                outputPath = "saved_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, frame)) {
+                    std::cout << "Saved frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the frame.\n";
+                }
             }
         } else if (key == 'g') {
             showGrayscale = !showGrayscale;
@@ -106,6 +160,22 @@ int main(int argc, char** argv) {
         } else if (key == 'b') { // blurred version
             applyBlur = !applyBlur;
             std::cout << "Blur mode " << (applyBlur ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'x') { // Sobel X
+            showSobelX = !showSobelX;
+            showSobelY = false; // Disable Sobel Y if Sobel X is enabled
+            std::cout << "Sobel X mode " << (showSobelX ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'y') { // Sobel Y
+            showSobelY = !showSobelY;
+            showSobelX = false; // Disable Sobel X if Sobel Y is enabled
+            std::cout << "Sobel Y mode " << (showSobelY ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'm') { // Gradient magnitude
+            showMagnitude = !showMagnitude;
+            showSobelX = false; // Disable Sobel X if magnitude is enabled
+            showSobelY = false; // Disable Sobel Y if magnitude is enabled
+            std::cout << "Gradient magnitude mode " << (showMagnitude ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'l') { // BlurQuantize
+            showBlurQuantize = !showBlurQuantize;
+            std::cout << "Blur quantize mode " << (showBlurQuantize ? "enabled" : "disabled") << ".\n";
         }
     }
 

@@ -70,3 +70,146 @@ void applySepiaTone(cv::Mat &src, cv::Mat &dst) {
         }
     }
 }
+
+
+// Function to apply a 3x3 Sobel X filter
+int sobelX3x3(cv::Mat &src, cv::Mat &dst) {
+    // Check if the source image has 3 channels (RGB)
+    if (src.channels() != 3) {
+        std::cerr << "Input image must have 3 channels (RGB).\n";
+        return -1; // Error
+    }
+
+    // Initialize the destination image
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
+
+    // Define the Sobel X kernel
+    int kernelX[3][3] = {
+        {-1, 0, 1},
+        {-2, 0, 2},
+        {-1, 0, 1}
+    };
+
+    // Apply the Sobel X filter
+    for (int row = 1; row < src.rows - 1; ++row) {
+        for (int col = 1; col < src.cols - 1; ++col) {
+            cv::Vec3s sum = cv::Vec3s(0, 0, 0);
+            for (int i = -1; i <= 1; ++i) {
+                for (int j = -1; j <= 1; ++j) {
+                    cv::Vec3b pixel = src.at<cv::Vec3b>(row + i, col + j);
+                    for (int k = 0; k < 3; ++k) {
+                        sum[k] += pixel[k] * kernelX[i + 1][j + 1];
+                    }
+                }
+            }
+            dst.at<cv::Vec3s>(row, col) = sum;
+        }
+    }
+
+    return 0; // Success
+}
+
+// Function to apply a 3x3 Sobel Y filter
+int sobelY3x3(cv::Mat &src, cv::Mat &dst) {
+    // Check if the source image has 3 channels (RGB)
+    if (src.channels() != 3) {
+        std::cerr << "Input image must have 3 channels (RGB).\n";
+        return -1; // Error
+    }
+
+    // Initialize the destination image
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
+
+    // Define the Sobel Y kernel
+    int kernelY[3][3] = {
+        {1, 2, 1},
+        {0, 0, 0},
+        {-1, -2, -1}
+    };
+
+    // Apply the Sobel Y filter
+    for (int row = 1; row < src.rows - 1; ++row) {
+        for (int col = 1; col < src.cols - 1; ++col) {
+            cv::Vec3s sum = cv::Vec3s(0, 0, 0);
+            for (int i = -1; i <= 1; ++i) {
+                for (int j = -1; j <= 1; ++j) {
+                    cv::Vec3b pixel = src.at<cv::Vec3b>(row + i, col + j);
+                    for (int k = 0; k < 3; ++k) {
+                        sum[k] += pixel[k] * kernelY[i + 1][j + 1];
+                    }
+                }
+            }
+            dst.at<cv::Vec3s>(row, col) = sum;
+        }
+    }
+
+    return 0; // Success
+}
+
+int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
+    // Check if 3-channel signed short images
+    if (sx.type() != CV_16SC3 || sy.type() != CV_16SC3 || sx.size() != sy.size()) {
+        std::cerr << "Input images must be of type CV_16SC3 and have the same size.\n";
+        return -1; // Error
+    }
+
+    // Initialize the destination image
+    dst = cv::Mat::zeros(sx.size(), CV_8UC3);
+
+    // Loop through each pixel
+    for (int row = 0; row < sx.rows; ++row) {
+        for (int col = 0; col < sx.cols; ++col) {
+            // Access the pixels at (row, col)
+            cv::Vec3s pixelSx = sx.at<cv::Vec3s>(row, col);
+            cv::Vec3s pixelSy = sy.at<cv::Vec3s>(row, col);
+            cv::Vec3b pixelDst;
+
+            // Calculate the gradient magnitude for each channel
+            for (int k = 0; k < 3; ++k) {
+                float magnitude = std::sqrt(pixelSx[k] * pixelSx[k] + pixelSy[k] * pixelSy[k]);
+                pixelDst[k] = cv::saturate_cast<uchar>(magnitude);
+            }
+
+            // Assign the calculated magnitude to the destination image
+            dst.at<cv::Vec3b>(row, col) = pixelDst;
+        }
+    }
+
+    return 0; // Success
+}
+
+int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels) {
+    // Check if the source image has 3 channels (RGB)
+    if (src.channels() != 3) {
+        std::cerr << "Input image must have 3 channels (RGB).\n";
+        return -1; // Error
+    }
+
+    // Blur the image
+    cv::Mat blurred;
+    cv::GaussianBlur(src, blurred, cv::Size(15, 15), 0); // Apply a Gaussian blur
+
+    // Calculate the size of each bucket
+    float b = 255.0 / levels;
+
+    // Initialize the destination image
+    dst = blurred;
+
+    // Loop through each pixel
+    for (int row = 0; row < blurred.rows; ++row) {
+        for (int col = 0; col < blurred.cols; ++col) {
+            // Access the pixel at (row, col)
+            cv::Vec3b pixel = blurred.at<cv::Vec3b>(row, col);
+
+            // Quantize each channel
+            for (int k = 0; k < 3; ++k) {
+                float x = pixel[k];
+                float xt = std::round(x / b);
+                float xf = xt * b;
+                dst.at<cv::Vec3b>(row, col)[k] = cv::saturate_cast<uchar>(xf); // convert the xf into a range of 0 to 255.
+            }
+        }
+    }
+
+    return 0; // Success
+}
