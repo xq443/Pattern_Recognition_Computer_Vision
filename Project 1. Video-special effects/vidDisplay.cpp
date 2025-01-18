@@ -7,6 +7,7 @@
 #include "timeBlur.h" 
 #include "faceDetect.h"
 #include <opencv2/opencv.hpp>
+#include "DA2Network.hpp"
 #include <cstdio> // gives me printf
 #include <cstring> // gives me strcpy
 

@@ -4,7 +4,6 @@
   CS 5330 OpenCV Project 1 task 4
  */
 #include "filter.h"
-
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <string>
