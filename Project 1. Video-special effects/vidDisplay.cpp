@@ -5,6 +5,7 @@
  */
 #include "filter.h"
 #include "timeBlur.h" 
+#include "faceDetect.h"
 #include <opencv2/opencv.hpp>
 #include <cstdio> // gives me printf
 #include <cstring> // gives me strcpy
@@ -49,6 +50,7 @@ int main(int argc, char** argv) {
     bool showSobelY = false;
     bool showMagnitude = false;
     bool showBlurQuantize = false;
+    bool faceDetectionEnabled = false;
 
     std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize.\n";
 
@@ -60,6 +62,13 @@ int main(int argc, char** argv) {
             std::cout << "Captured empty frame.\n";
             break;
         }
+
+        // Convert the frame to grayscale for face detection
+        cv::Mat grey;
+        cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY);
+
+        // Vector to hold detected faces
+        std::vector<cv::Rect> faces;
 
         // Check and process the frame to greyscale accordingly
         if (showGrayscale) {
@@ -98,8 +107,12 @@ int main(int argc, char** argv) {
         } else if (showBlurQuantize) {
             blurQuantize(frame, blurQuantizeFrame, 10); // Default levels to 10
             cv::imshow("Video Display", blurQuantizeFrame);
-        } else {
+        } else if (faceDetectionEnabled) {    // Check if face detection is enabled
+            detectFaces(grey, faces);
+            drawBoxes(frame, faces, 30, 1.0); // MinWidth: 30 and scale AS 1.0 
             cv::imshow("Video Display", frame);
+        } else {
+                cv::imshow("Video Display", frame);
         }
 
 
@@ -140,6 +153,13 @@ int main(int argc, char** argv) {
                 } else {
                     std::cerr << "Error: Could not save the blur quantize frame.\n";
                 }
+            } else if (faceDetectionEnabled) {
+                outputPath = "saved_facedetection_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, frame)) {
+                    std::cout << "Saved face detection frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the face detection frame.\n";
+                }
             } else {
                 outputPath = "saved_frame_" + std::to_string(id++) + ".jpg";
                 if (cv::imwrite(outputPath, frame)) {
@@ -176,6 +196,9 @@ int main(int argc, char** argv) {
         } else if (key == 'l') { // BlurQuantize
             showBlurQuantize = !showBlurQuantize;
             std::cout << "Blur quantize mode " << (showBlurQuantize ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'f') {
+            faceDetectionEnabled = !faceDetectionEnabled;
+            std::cout << "Face detection " << (faceDetectionEnabled ? "enabled" : "disabled") << ".\n";
         }
     }
 

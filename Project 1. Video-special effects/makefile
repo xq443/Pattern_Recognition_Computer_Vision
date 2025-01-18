@@ -24,7 +24,7 @@ BINDIR = .
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rules for making various executables
-vid: vidDisplay.o filter.o timeBlur.o
+vid: vidDisplay.o filter.o timeBlur.o faceDetect.o
 	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 
 # filter: filter.o
