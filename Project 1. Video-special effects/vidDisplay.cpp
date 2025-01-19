@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     // Create a window to display the video
     cv::namedWindow("Video Display", cv::WINDOW_AUTOSIZE);
 
-    cv::Mat frame, dstframe, sobelXFrame, sobelYFrame, absSobelX, absSobelY, magnitudeFrame, blurQuantizeFrame;
+    cv::Mat frame, dstframe, sobelXFrame, sobelYFrame, absSobelX, absSobelY, magnitudeFrame, blurQuantizeFrame, cartoonFrame, embossFrame, faceBlurFrame;
     bool showGrayscale = false;
     bool showAlternativeGreyscale = false;
     bool showSepiaFilter = false;
@@ -52,8 +52,11 @@ int main(int argc, char** argv) {
     bool showMagnitude = false;
     bool showBlurQuantize = false;
     bool faceDetectionEnabled = false;
+    bool showCartoonEffect = false;
+    bool showEmbossEffect = false;
+    bool faceBlurEnabled = false;
 
-    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize.\n";
+    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize, 'c' to show cartoon effect, 'k' to show emboss effect, 'o' go show blurred face effect.\n";
 
 
     while (true) {
@@ -112,8 +115,19 @@ int main(int argc, char** argv) {
             detectFaces(grey, faces);
             drawBoxes(frame, faces, 30, 1.0); // MinWidth: 30 and scale AS 1.0 
             cv::imshow("Video Display", frame);
+        } else if (showCartoonEffect) {
+            cartoonEffect(frame, cartoonFrame);
+            cv::imshow("Video Display", cartoonFrame);
+        } else if (showEmbossEffect) {
+            embossEffect(frame, embossFrame);
+            cv::imshow("Video Display", embossFrame);
+        } else if (faceBlurEnabled) {    // Check if face detection is enabled
+            detectFaces(grey, faces);
+            drawBoxes(frame, faces, 30, 1.0); // MinWidth: 30 and scale AS 1.0 
+            applyFaceBlur(frame, faces);
+            cv::imshow("Video Display", frame);
         } else {
-                cv::imshow("Video Display", frame);
+            cv::imshow("Video Display", frame);
         }
 
 
@@ -161,6 +175,27 @@ int main(int argc, char** argv) {
                 } else {
                     std::cerr << "Error: Could not save the face detection frame.\n";
                 }
+            } else if (showCartoonEffect) {
+                outputPath = "saved_cartoon_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, cartoonFrame)) {
+                    std::cout << "Saved cartoon frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the cartoon frame.\n";
+                }
+            } else if (showEmbossEffect) {
+                outputPath = "saved_emboss_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, embossFrame)) {
+                    std::cout << "Saved emboss frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the emboss frame.\n";
+                }
+            } else if (faceBlurEnabled) {
+                outputPath = "saved_faceblurred_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, frame)) {
+                    std::cout << "Saved face blurred frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the face blurred frame.\n";
+                }
             } else {
                 outputPath = "saved_frame_" + std::to_string(id++) + ".jpg";
                 if (cv::imwrite(outputPath, frame)) {
@@ -200,6 +235,15 @@ int main(int argc, char** argv) {
         } else if (key == 'f') {
             faceDetectionEnabled = !faceDetectionEnabled;
             std::cout << "Face detection " << (faceDetectionEnabled ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'k') {
+            showEmbossEffect = !showEmbossEffect;
+            std::cout << "Emboss effect " << (showEmbossEffect ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'c') {
+            showCartoonEffect = !showCartoonEffect;
+            std::cout << "Cartoon effect " << (showCartoonEffect ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'o') {
+            faceBlurEnabled = !faceBlurEnabled;
+            std::cout << "Face blurred effect " << (faceBlurEnabled ? "enabled" : "disabled") << ".\n";
         }
     }
 

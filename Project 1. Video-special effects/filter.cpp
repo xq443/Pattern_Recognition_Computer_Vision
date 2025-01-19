@@ -212,3 +212,55 @@ int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels) {
 
     return 0; // Success
 }
+
+// additional effects
+void cartoonEffect(cv::Mat &src, cv::Mat &dst) {
+    cv::Mat gray, edges, color;
+
+    // Convert to grayscale
+    cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+
+    // Apply median blur to reduce noise
+    cv::medianBlur(gray, gray, 7);
+
+    // Detect edges using the Laplacian operator
+    cv::Laplacian(gray, edges, CV_8U, 5);
+
+    // Threshold the edges to create a binary mask
+    cv::threshold(edges, edges, 80, 255, cv::THRESH_BINARY_INV);
+
+    // Apply bilateral filter to smooth colors while preserving edges
+    cv::bilateralFilter(src, color, 9, 150, 150);
+
+    // Enhance edges by dilating the edge mask
+    cv::dilate(edges, edges, cv::Mat(), cv::Point(-1, -1), 1);
+
+    // Combine the quantized colors with the enhanced edge mask
+    cv::bitwise_and(color, color, dst, edges);
+}
+
+void embossEffect(cv::Mat &src, cv::Mat &dst) {
+    // Convert source image to grayscale if it's not already
+    cv::Mat gray;
+    if (src.channels() == 3) {
+        cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+    } else {
+        gray = src;
+    }
+
+    // Compute Sobel gradients
+    cv::Mat sobelX, sobelY;
+    cv::Sobel(gray, sobelX, CV_32F, 1, 0, 3); // Gradient in X direction
+    cv::Sobel(gray, sobelY, CV_32F, 0, 1, 3); // Gradient in Y direction
+
+    // Normalize direction vector (0.7071, 0.7071)
+    cv::Vec2f direction(0.7071f, 0.7071f);
+
+    // Apply the embossing effect
+    cv::Mat embossed = sobelX * direction[0] + sobelY * direction[1];
+
+    // Normalize the result to 8-bit for display
+    double minVal, maxVal;
+    cv::minMaxLoc(embossed, &minVal, &maxVal); // Find the range of the result
+    embossed.convertTo(dst, CV_8U, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
+}

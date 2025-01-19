@@ -86,3 +86,20 @@ int drawBoxes( cv::Mat &frame, std::vector<cv::Rect> &faces, int minWidth, float
 
   return(0);
 }
+
+/*
+  Arguments:
+  cv::Mat &frame - the source image in which to apply the blur effect
+  std::vector<cv::Rect> &faces - the vector of detected faces (from detectFaces)
+*/
+void applyFaceBlur(cv::Mat &frame, std::vector<cv::Rect> &faces) {
+    // Loop through all detected faces
+    for (const auto &face : faces) {
+        // Extract face region from the image
+        cv::Mat faceROI = frame(face);
+
+        // Apply Gaussian blur to the face region
+        // You can change the kernel size (15x15) to adjust the blur strength
+        cv::GaussianBlur(faceROI, faceROI, cv::Size(15, 15), 0);
+    }
+}
