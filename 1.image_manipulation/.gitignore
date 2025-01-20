@@ -1,0 +1,38 @@
+# Ignore all .log files
+*.log
+
+# Ignore all .tmp files
+*.tmp
+
+# Ignore all .o files
+*.o
+
+# Ignore node_modules folder
+node_modules/
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore MacOS system files
+.DS_Store
+
+# Ignore IntelliJ project files
+.idea/
+
+# Ignore VSCode settings
+.vscode/
+
+# Ignore build directories
+build/
+bin/
+
+# Ignore OS-specific files
+Thumbs.db
+desktop.ini
+
+# Ignore OpenCV binaries and libraries (if relevant)
+*.so
+*.dylib
+*.dll
