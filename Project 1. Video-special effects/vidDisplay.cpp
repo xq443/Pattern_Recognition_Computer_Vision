@@ -55,8 +55,11 @@ int main(int argc, char** argv) {
     bool showCartoonEffect = false;
     bool showEmbossEffect = false;
     bool faceBlurEnabled = false;
+    bool showVignette = false;
+    bool showPencilSketch = false;
+    bool showOilPainting = false;
 
-    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize, 'c' to show cartoon effect, 'k' to show emboss effect, 'o' go show blurred face effect.\n";
+    std::cout << "Press 'q' to quit, 's' to save a frame, 'g' to make greyscale, 'h' to make alternative greyscale, 'e' to toggle sepia, 'b' to apply blur, 'x' to show Sobel X, 'y' to show Sobel Y, 'm' to show gradient magnitude, 'l' to show blur and quantize, 'c' to show cartoon effect, 'k' to show emboss effect, 'o' go show blurred face effect, 'v' to get vinegrette effect, 't' to show pencil sketch, and 'u' to show oil painting effect.\n";
 
 
     while (true) {
@@ -126,6 +129,15 @@ int main(int argc, char** argv) {
             drawBoxes(frame, faces, 30, 1.0); // MinWidth: 30 and scale AS 1.0 
             applyFaceBlur(frame, faces);
             cv::imshow("Video Display", frame);
+        } else if (showVignette) {
+            applySepiaToneWithVignette(frame, dstframe);
+            cv::imshow("Video Display", dstframe);
+        } else if (showPencilSketch) {
+            pencilSketch(frame, dstframe);
+            cv::imshow("Video Display", dstframe);
+        } else if (showOilPainting) {
+            oilPainting(frame, dstframe);
+            cv::imshow("Video Display", dstframe);
         } else {
             cv::imshow("Video Display", frame);
         }
@@ -196,9 +208,30 @@ int main(int argc, char** argv) {
                 } else {
                     std::cerr << "Error: Could not save the face blurred frame.\n";
                 }
+            } else if (showVignette) {
+                outputPath = "saved_vignette_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, frame)) {
+                    std::cout << "Saved vignette frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the vignette frame.\n";
+                }
+            } else if (showPencilSketch) {
+                outputPath = "saved_pencilsketch_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, dstframe)) {
+                    std::cout << "Saved pencil sketch frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the pencil sketch frame.\n";
+                }
+            } else if (showOilPainting) {
+                outputPath = "saved_oilpainting_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, dstframe)) {
+                    std::cout << "Saved oil painting frame as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the oil painting frame.\n";
+                }
             } else {
                 outputPath = "saved_frame_" + std::to_string(id++) + ".jpg";
-                if (cv::imwrite(outputPath, frame)) {
+                if (cv::imwrite(outputPath, dstframe)) {
                     std::cout << "Saved frame as " << outputPath << "\n";
                 } else {
                     std::cerr << "Error: Could not save the frame.\n";
@@ -244,7 +277,16 @@ int main(int argc, char** argv) {
         } else if (key == 'o') {
             faceBlurEnabled = !faceBlurEnabled;
             std::cout << "Face blurred effect " << (faceBlurEnabled ? "enabled" : "disabled") << ".\n";
-        }
+        } else if (key == 'v') {
+            showVignette = !showVignette;
+            std::cout << "Vignette effect " << (showVignette ? "enabled" : "disabled") << ".\n";
+        } else if (key == 't') {
+            showPencilSketch = !showPencilSketch;
+            std::cout << "Pencil sketch effect " << (showPencilSketch ? "enabled" : "disabled") << ".\n";
+        } else if (key == 'u') {
+            showOilPainting = !showOilPainting;
+            std::cout << "Oil painting effect " << (showOilPainting ? "enabled" : "disabled") << ".\n";
+        } 
     }
 
     // Release resources and close windows

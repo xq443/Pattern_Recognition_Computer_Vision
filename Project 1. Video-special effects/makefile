@@ -14,7 +14,7 @@ CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L/usr/local/Cellar/opencv/4.11.0/lib -L/usr/local/include/onnxruntime/
 
 # OpenCV libraries and MacOS frameworks (adjust for Homebrew)
-LDLIBS = -ltiff -lpng -ljpeg -llapack -lblas -lz -ljasper -lwebp -framework AVFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices -framework CoreGraphics -framework AppKit -framework OpenCL  -lopencv_core -lopencv_highgui -lopencv_video -lopencv_videoio -lopencv_imgcodecs -lopencv_imgproc -lopencv_objdetect -lonnxruntime
+LDLIBS = -ltiff -lpng -ljpeg -llapack -lblas -lz -ljasper -lwebp -framework AVFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices -framework CoreGraphics -framework AppKit -framework OpenCL  -lopencv_core -lopencv_highgui -lopencv_video -lopencv_videoio -lopencv_imgcodecs -lopencv_imgproc -lopencv_objdetect -lonnxruntime -lopencv_xphoto
 
 # Location to write the executables
 BINDIR = .

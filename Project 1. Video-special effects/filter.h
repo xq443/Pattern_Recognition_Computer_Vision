@@ -18,7 +18,10 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst);
 int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels);
 void cartoonEffect(cv::Mat &src, cv::Mat &dst);
 void embossEffect(cv::Mat &src, cv::Mat &dst);
-void faceDepthColorEffect(cv::Mat &src, cv::Mat &dst, cv::CascadeClassifier &faceDetector);
+void applySepiaToneWithVignette(const cv::Mat &src, cv::Mat &dst);
+void oilPainting(cv::Mat &inputImage, cv::Mat &outputImage);
+void pencilSketch(cv::Mat &inputImage, cv::Mat &outputImage);
+
 
 
 #endif

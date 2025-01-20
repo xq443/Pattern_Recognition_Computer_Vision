@@ -5,6 +5,7 @@
  */
 #include "filter.h"
 #include <opencv2/opencv.hpp>
+#include <opencv2/xphoto.hpp>  
 #include <iostream>
 #include <string>
 
@@ -63,6 +64,53 @@ void applySepiaTone(cv::Mat &src, cv::Mat &dst) {
             uchar newB = std::min(255.0, 0.272 * R + 0.534 * G + 0.131 * B);
             uchar newG = std::min(255.0, 0.349 * R + 0.686 * G + 0.168 * B);
             uchar newR = std::min(255.0, 0.393 * R + 0.769 * G + 0.189 * B);
+
+            // Assign the new values to the destination image
+            dst.at<cv::Vec3b>(row, col) = cv::Vec3b(newB, newG, newR);
+        }
+    }
+}
+
+void applySepiaToneWithVignette(const cv::Mat &src, cv::Mat &dst) {
+    dst = src;
+
+    // Image dimensions
+    int rows = src.rows;
+    int cols = src.cols;
+
+    // Calculate the center of the image
+    cv::Point center(cols / 2, rows / 2);
+
+    // Calculate the maximum distance from the center
+    double maxDist = std::sqrt(center.x * center.x + center.y * center.y);
+
+    // Loop through each pixel
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            // Access the pixel at (row, col)
+            cv::Vec3b pixel = src.at<cv::Vec3b>(row, col);
+
+            // Original RGB values
+            uchar B = pixel[0];
+            uchar G = pixel[1];
+            uchar R = pixel[2];
+
+            // Sepia transformation with clamping
+            uchar newB = std::min(255.0, 0.272 * R + 0.534 * G + 0.131 * B);
+            uchar newG = std::min(255.0, 0.349 * R + 0.686 * G + 0.168 * B);
+            uchar newR = std::min(255.0, 0.393 * R + 0.769 * G + 0.189 * B);
+
+            // Calculate the distance of the pixel from the center
+            double dist = std::sqrt(std::pow(col - center.x, 2) + std::pow(row - center.y, 2));
+
+            // Calculate the vignette factor (closer to center = factor closer to 1)
+            double vignetteFactor = 1.0 - (dist / maxDist); // Scale factor: 1 at center, 0 at edges
+
+            // Apply the vignette effect
+            vignetteFactor = std::max(0.0, vignetteFactor); // Ensure it's non-negative
+            newB = static_cast<uchar>(newB * vignetteFactor);
+            newG = static_cast<uchar>(newG * vignetteFactor);
+            newR = static_cast<uchar>(newR * vignetteFactor);
 
             // Assign the new values to the destination image
             dst.at<cv::Vec3b>(row, col) = cv::Vec3b(newB, newG, newR);
@@ -263,4 +311,27 @@ void embossEffect(cv::Mat &src, cv::Mat &dst) {
     double minVal, maxVal;
     cv::minMaxLoc(embossed, &minVal, &maxVal); // Find the range of the result
     embossed.convertTo(dst, CV_8U, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
+}
+
+void pencilSketch(cv::Mat &inputImage, cv::Mat &outputImage) {
+    // Convert to grayscale
+    cv::Mat grayImage;
+    cv::cvtColor(inputImage, grayImage, cv::COLOR_BGR2GRAY);
+    
+    // Invert the grayscale image
+    cv::Mat invertedImage;
+    cv::bitwise_not(grayImage, invertedImage);
+    
+    // Blur the inverted image
+    cv::Mat blurredImage;
+    cv::GaussianBlur(invertedImage, blurredImage, cv::Size(21, 21), 0);
+    
+    // Create the pencil sketch by dividing the grayscale image by the blurred inverted image
+    cv::divide(grayImage, 255 - blurredImage, outputImage, 256.0);
+}
+
+
+void oilPainting(cv::Mat &src, cv::Mat &dst) {
+    // Apply oil painting effect with radius and color count
+    cv::xphoto::oilPainting(src, dst, 10, 1, cv::COLOR_BGR2Lab); 
 }
