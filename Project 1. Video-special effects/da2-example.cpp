@@ -22,7 +22,6 @@ int main(int argc, char *argv[]) {
   cv::Mat dst_vis;
   char filename[256]; // a string for the filename
 
-  // usage: checking if the user provided a filename
   if(argc < 2) {
     printf("Usage %s <image filename>\n", argv[0]);
     exit(-1);

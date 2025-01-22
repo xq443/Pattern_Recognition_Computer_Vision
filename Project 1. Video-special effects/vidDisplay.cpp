@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
             magnitude(sobelXFrame, sobelYFrame, magnitudeFrame);
             cv::imshow("Video Display", magnitudeFrame);
         } else if (showBlurQuantize) {
-            blurQuantize(frame, blurQuantizeFrame, 10); // Default levels to 10
+            blurQuantize(frame, blurQuantizeFrame, 50); // make it more strong
             cv::imshow("Video Display", blurQuantizeFrame);
         } else if (faceDetectionEnabled) {    // Check if face detection is enabled
             detectFaces(grey, faces);
