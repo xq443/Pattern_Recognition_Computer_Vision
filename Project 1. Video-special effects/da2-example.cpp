@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Apply sepia tone to the image
-  applySepiaTone(src, src);
+  applySepiaTone(src);
   
   // make a DANetwork object, if you use a different network, you have
   // to include the input and output layer names

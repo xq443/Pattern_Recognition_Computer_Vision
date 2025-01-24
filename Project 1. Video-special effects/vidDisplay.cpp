@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         }
 
         if (showSepiaFilter) {
-            applySepiaTone(frame, dstframe);
+            applySepiaTone(frame);
         }
 
         if (applyBlur) {
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
             magnitude(sobelXFrame, sobelYFrame, magnitudeFrame);
             cv::imshow("Video Display", magnitudeFrame);
         } else if (showBlurQuantize) {
-            blurQuantize(frame, blurQuantizeFrame, 50); // make it more strong
+            blurQuantize(frame, blurQuantizeFrame, 50); // 50: make it stronger
             cv::imshow("Video Display", blurQuantizeFrame);
         } else if (faceDetectionEnabled) {    // Check if face detection is enabled
             detectFaces(grey, faces);
@@ -152,7 +152,14 @@ int main(int argc, char** argv) {
         } else if (key == 's') {
             static int id = 0;
             std::string outputPath;
-            if (showSobelX) {
+            if (showSepiaFilter) {
+                outputPath = "saved_sepiafilter_frame_" + std::to_string(id++) + ".jpg";
+                if (cv::imwrite(outputPath, frame)) {
+                    std::cout << "Saved sepia filter as " << outputPath << "\n";
+                } else {
+                    std::cerr << "Error: Could not save the sepia filter frame.\n";
+                }
+            } else if (showSobelX) {
                 outputPath = "saved_sobelX_frame_" + std::to_string(id++) + ".jpg";
                 if (cv::imwrite(outputPath, absSobelX)) {
                     std::cout << "Saved Sobel X frame as " << outputPath << "\n";

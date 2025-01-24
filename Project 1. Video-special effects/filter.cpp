@@ -2,6 +2,7 @@
   Xujia Qin
   January 14th 2025
   CS 5330 OpenCV Project 1 task 4
+  Note: for further optimization, I can use ptr to access pixel instead of at method
  */
 #include "filter.h"
 #include <opencv2/opencv.hpp>
@@ -19,78 +20,64 @@ void applyGrayscale(cv::Mat& frame) {
 }
 
 int greyscale(cv::Mat &src, cv::Mat &dst) {
-    // Check if the source image has 3 channels (RGB)
-    if (src.channels() != 3) {
-        std::cerr << "Input image must have 3 channels (RGB).\n";
-        return -1; // Error
-    }
-
     dst = src;
+    for (int row = 0; row < dst.rows; ++row) {
+        for (int col = 0; col < dst.cols; ++col) {
+            cv::Vec3b pixel = dst.at<cv::Vec3b>(row, col);
 
-    // Loop through each pixel
-    for (int row = 0; row < src.rows; ++row) {
-        for (int col = 0; col < src.cols; ++col) {
-            // Access the pixel at (row, col)
-            cv::Vec3b pixel = src.at<cv::Vec3b>(row, col);
+            // Calculate the grayscale value using the formula
+            uchar gray = static_cast<uchar>(0.299 * pixel[2] + 0.587 * pixel[1] + 0.114 * pixel[0]);
 
-            // Perform the creative transformation on each channel
-            uchar r = 255 - pixel[2]; // Red channel, subtract from 255
-            uchar g = 255 - pixel[1]; // Green channel, subtract from 255
-            uchar b = 255 - pixel[0]; // Blue channel, subtract from 255
-
-            // Set all three channels of the destination pixel to the same value
-            dst.at<cv::Vec3b>(row, col) = cv::Vec3b(b, g, r);
+            // Set all three channels of the destination pixel to the grayscale value
+            dst.at<cv::Vec3b>(row, col) = cv::Vec3b(gray, gray, gray);
         }
     }
 
-    return 0; // Success
+    return 0; // success
 }
 
-void applySepiaTone(cv::Mat &src, cv::Mat &dst) {
-    dst = src;
+void applySepiaTone(cv::Mat &frame) {
+    if (frame.empty()) {
+        std::cerr << "Error: Empty frame provided to applyGrayscale function.\n";
+        return;
+    }
 
-    // Loop through each pixel
-    for (int row = 0; row < src.rows; ++row) {
-        for (int col = 0; col < src.cols; ++col) {
-            // Access the pixel at (row, col)
-            cv::Vec3b pixel = src.at<cv::Vec3b>(row, col);
+    for (int row = 0; row < frame.rows; ++row) {
+        for (int col = 0; col < frame.cols; ++col) {
+            cv::Vec3b pixel = frame.at<cv::Vec3b>(row, col);
 
-            // Original RGB values
+            // RGB values
             uchar B = pixel[0];
             uchar G = pixel[1];
             uchar R = pixel[2];
 
             // Sepia transformation with clamping
-            uchar newB = std::min(255.0, 0.272 * R + 0.534 * G + 0.131 * B);
-            uchar newG = std::min(255.0, 0.349 * R + 0.686 * G + 0.168 * B);
-            uchar newR = std::min(255.0, 0.393 * R + 0.769 * G + 0.189 * B);
+            uchar newB = std::min(255, static_cast<int>(0.272 * R + 0.534 * G + 0.131 * B));
+            uchar newG = std::min(255, static_cast<int>(0.349 * R + 0.686 * G + 0.168 * B));
+            uchar newR = std::min(255, static_cast<int>(0.393 * R + 0.769 * G + 0.189 * B));
 
             // Assign the new values to the destination image
-            dst.at<cv::Vec3b>(row, col) = cv::Vec3b(newB, newG, newR);
+            frame.at<cv::Vec3b>(row, col) = cv::Vec3b(newB, newG, newR);
         }
     }
 }
 
 void applySepiaToneWithVignette(const cv::Mat &src, cv::Mat &dst) {
     dst = src;
-
-    // Image dimensions
     int rows = src.rows;
     int cols = src.cols;
 
     // Calculate the center of the image
     cv::Point center(cols / 2, rows / 2);
 
-    // Calculate the maximum distance from the center
+    // Calculate the max distance from the center
     double maxDist = std::sqrt(center.x * center.x + center.y * center.y);
 
-    // Loop through each pixel
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
-            // Access the pixel at (row, col)
             cv::Vec3b pixel = src.at<cv::Vec3b>(row, col);
 
-            // Original RGB values
+            // RGB values
             uchar B = pixel[0];
             uchar G = pixel[1];
             uchar R = pixel[2];
@@ -100,10 +87,10 @@ void applySepiaToneWithVignette(const cv::Mat &src, cv::Mat &dst) {
             uchar newG = std::min(255.0, 0.349 * R + 0.686 * G + 0.168 * B);
             uchar newR = std::min(255.0, 0.393 * R + 0.769 * G + 0.189 * B);
 
-            // Calculate the distance of the pixel from the center
+            // the distance of the pixel from the center
             double dist = std::sqrt(std::pow(col - center.x, 2) + std::pow(row - center.y, 2));
 
-            // Calculate the vignette factor (closer to center = factor closer to 1)
+            // the vignette factor (closer to center = factor closer to 1)
             double vignetteFactor = 1.0 - (dist / maxDist); // Scale factor: 1 at center, 0 at edges
 
             // Apply the vignette effect
@@ -203,10 +190,8 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
     // Initialize the destination image
     dst = cv::Mat::zeros(sx.size(), CV_8UC3);
 
-    // Loop through each pixel
     for (int row = 0; row < sx.rows; ++row) {
         for (int col = 0; col < sx.cols; ++col) {
-            // Access the pixels at (row, col)
             cv::Vec3s pixelSx = sx.at<cv::Vec3s>(row, col);
             cv::Vec3s pixelSy = sy.at<cv::Vec3s>(row, col);
             cv::Vec3b pixelDst;
@@ -226,7 +211,6 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
 }
 
 int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels) {
-    // Check if the source image has 3 channels (RGB)
     if (src.channels() != 3) {
         std::cerr << "Input image must have 3 channels (RGB).\n";
         return -1; // Error
@@ -242,10 +226,8 @@ int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels) {
     // Initialize the destination image
     dst = blurred;
 
-    // Loop through each pixel
     for (int row = 0; row < blurred.rows; ++row) {
         for (int col = 0; col < blurred.cols; ++col) {
-            // Access the pixel at (row, col)
             cv::Vec3b pixel = blurred.at<cv::Vec3b>(row, col);
 
             // Quantize each channel
@@ -288,7 +270,7 @@ void cartoonEffect(cv::Mat &src, cv::Mat &dst) {
 }
 
 void embossEffect(cv::Mat &src, cv::Mat &dst) {
-    // Convert source image to grayscale if it's not already
+    // Convert source image to grayscale
     cv::Mat gray;
     if (src.channels() == 3) {
         cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
@@ -296,7 +278,7 @@ void embossEffect(cv::Mat &src, cv::Mat &dst) {
         gray = src;
     }
 
-    // Compute Sobel gradients
+    // Sobel gradients
     cv::Mat sobelX, sobelY;
     cv::Sobel(gray, sobelX, CV_32F, 1, 0, 3); // Gradient in X direction
     cv::Sobel(gray, sobelY, CV_32F, 0, 1, 3); // Gradient in Y direction
@@ -311,10 +293,12 @@ void embossEffect(cv::Mat &src, cv::Mat &dst) {
     double minVal, maxVal;
     cv::minMaxLoc(embossed, &minVal, &maxVal); // Find the range of the result
     embossed.convertTo(dst, CV_8U, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
+
+    // Convert single channel to 3 channels
+    cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
 void pencilSketch(cv::Mat &inputImage, cv::Mat &outputImage) {
-    // Convert to grayscale
     cv::Mat grayImage;
     cv::cvtColor(inputImage, grayImage, cv::COLOR_BGR2GRAY);
     
@@ -322,12 +306,15 @@ void pencilSketch(cv::Mat &inputImage, cv::Mat &outputImage) {
     cv::Mat invertedImage;
     cv::bitwise_not(grayImage, invertedImage);
     
-    // Blur the inverted image
+    // Blur the output image
     cv::Mat blurredImage;
     cv::GaussianBlur(invertedImage, blurredImage, cv::Size(21, 21), 0);
     
-    // Create the pencil sketch by dividing the grayscale image by the blurred inverted image
+    // Create the pencil sketch by dividing the grayscale image by the blurred output image
     cv::divide(grayImage, 255 - blurredImage, outputImage, 256.0);
+    
+    // Convert single channel to 3 channels
+    cv::cvtColor(outputImage, outputImage, cv::COLOR_GRAY2BGR);
 }
 
 
