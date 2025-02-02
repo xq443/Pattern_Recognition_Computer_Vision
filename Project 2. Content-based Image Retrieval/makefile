@@ -33,7 +33,7 @@ feature: featureVector.o
 dis: distanceMetric.o featureVector.o
 	$(CXX) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 
-topN: topNGeneration.o featureVector.o distanceMetric.o csv_util.o 
+topN: topNGeneration.o featureVector.o distanceMetric.o csv_util.o utils.o
 	$(CXX) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 
 test: featureVector.o

@@ -157,72 +157,119 @@ vector<float> ThreedHistogram(cv::Mat &src, int bins) {
  */
 
 vector<float> multiHistogram(cv::Mat &src, int bins) {
-  // Dynamically compute bin size
-  int bin_size = 256 / bins;
-
-  // Create histograms for the top and bottom halves
-  vector<vector<vector<int>>> hist3d1(bins, vector<vector<int>>(bins, vector<int>(bins, 0)));
-  vector<vector<vector<int>>> hist3d2(bins, vector<vector<int>>(bins, vector<int>(bins, 0)));
-
-  vector<float> result;
+  // create a 3D-vector to store the count of colors in rgb color space.
+  vector<vector<vector<int> > > hist3d1(
+	  bins + 1, vector<vector<int> >(bins + 1, vector<int>(bins + 1, 0)));
+  vector<float> result; // store the final normalized 3d-histogram as 1d-feature vector.
+  int bin_size = 255/8;
   float total_pixels = 0.0;
+  // loop through rows.
+  for (int i = 0; i <= src.rows/2; i++) {
+	// create row pointer to access rows.
+	cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
+	for (int j = 0; j < src.cols; j++) {
+	  float blue = rptr[j][0];
+	  float green = rptr[j][1];
+	  float red = rptr[j][2];
 
-  // Process the top half of the image
-  for (int i = 0; i < src.rows / 2; i++) {
-    cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
-    for (int j = 0; j < src.cols; j++) {
-      float blue = rptr[j][0];
-      float green = rptr[j][1];
-      float red = rptr[j][2];
+	  int blue_index = blue/bin_size;
+	  int green_index = green/bin_size;
+	  int red_index = red/bin_size;
 
-      int blue_index = min(static_cast<int>(blue / bin_size), bins - 1);
-      int green_index = min(static_cast<int>(green / bin_size), bins - 1);
-      int red_index = min(static_cast<int>(red / bin_size), bins - 1);
+	  total_pixels++;
+	  hist3d1[blue_index][green_index][red_index] += 1;
+	}
+  }
+  // bottom half
+  // create a 3D-vector to store the count of colors in rgb color space.
+  vector<vector<vector<int> > > hist3d2(
+	  bins + 1, vector<vector<int> >(bins + 1, vector<int>(bins + 1)));
+  // store the final normalized 3d-histogram as 1d-feature vector.
 
-      hist3d1[blue_index][green_index][red_index] += 1;
-      total_pixels++;
-    }
+  // loop through rows.
+  for (int i = (src.rows/2) + 1; i < src.rows; i++) {
+	// create row pointer to access rows.
+	cv::Vec3b *rptr1 = src.ptr<cv::Vec3b>(i);
+	for (int j = 0; j < src.cols; j++) {
+	  float blue = rptr1[j][0];
+	  float green = rptr1[j][1];
+	  float red = rptr1[j][2];
+
+	  int blue_index = blue/bin_size;
+	  int green_index = green/bin_size;
+	  int red_index = red/bin_size;
+
+	  //cout << blue << ":" << blue_index << "," << green << ":" << green_index << "," << red << ":" << red_index << endl;
+	  hist3d2[blue_index][green_index][red_index] += 1;
+	  total_pixels++;
+	}
   }
 
-  // Process the bottom half of the image
-  for (int i = src.rows / 2; i < src.rows; i++) {
-    cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
-    for (int j = 0; j < src.cols; j++) {
-      float blue = rptr[j][0];
-      float green = rptr[j][1];
-      float red = rptr[j][2];
 
-      int blue_index = min(static_cast<int>(blue / bin_size), bins - 1);
-      int green_index = min(static_cast<int>(green / bin_size), bins - 1);
-      int red_index = min(static_cast<int>(red / bin_size), bins - 1);
-
-      hist3d2[blue_index][green_index][red_index] += 1;
-      total_pixels++;
-    }
+  // step-2.
+  for (int i = 0; i < bins + 1; i++) {
+	for (int j = 0; j < bins + 1; j++) {
+	  for (int k = 0; k < bins + 1; k++) {
+		result.push_back(hist3d1[i][j][k]/total_pixels);
+	  }
+	}
   }
 
-  // Normalize and flatten histograms into a 1D vector
-  if (total_pixels > 0) {
-    for (int i = 0; i < bins; i++) {
-      for (int j = 0; j < bins; j++) {
-        for (int k = 0; k < bins; k++) {
-          result.push_back(hist3d1[i][j][k] / total_pixels);
-        }
-      }
-    }
-
-    for (int i = 0; i < bins; i++) {
-      for (int j = 0; j < bins; j++) {
-        for (int k = 0; k < bins; k++) {
-          result.push_back(hist3d2[i][j][k] / total_pixels);
-        }
-      }
-    }
-  } else {
-    result.assign(2 * bins * bins * bins, 0.0);  // Return zeroed histogram if no pixels processed
+  for (int i = 0; i < bins + 1; i++) {
+	for (int j = 0; j < bins + 1; j++) {
+	  for (int k = 0; k < bins + 1; k++) {
+		result.push_back(hist3d2[i][j][k]/total_pixels);
+	  }
+	}
   }
-
   return result;
+}
+
+
+/*
+ * Computes a multi 3D-histogram by taking the gradient magnitude for a given image.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number to bins to quantize.
+ */
+vector<float> colorTexture(cv::Mat &src) {
+  // compute a 3d Histogram for whole image.
+  vector<float> colorThreeDHist = ThreedHistogram(src);
+
+  // compute a 3d Histogram for the gradient magnitude Image.
+  cv::Mat sobelXImg, sobelYImg, gradMagImage;
+  sobelX3X3(src, sobelXImg); // get sobelx Image.
+  sobelY3X3(src, sobelYImg); // get sobely Image.
+  magnitude(sobelXImg, sobelYImg, gradMagImage); // get gradientMag Image.
+
+  vector<float> gradMagThreeDHist = ThreedHistogram(gradMagImage);
+
+  // Merge into single vector
+  for (int i = 0; i < gradMagThreeDHist.size(); i++) {
+	  colorThreeDHist.push_back(gradMagThreeDHist[i]);
+  }
+
+  return colorThreeDHist;
+}
+
+/*
+ * Computes a multi 3D-histogram for a given Image one for image and another by applying gradient magnitude on it.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number to bins to quantize.
+ */
+vector<float> LaplaciancolorTexture(cv::Mat &src) {
+  vector<float> colorThreeDhist = ThreedHistogram(src); // compute the 3D histogram for the whole image.
+
+  // compute a 3D histogram for the laplacian Image.
+  cv::Mat LaplacianImage;
+  laplacianFilter(src, LaplacianImage);
+  vector<float> LaplacianThreeDHist = ThreedHistogram(LaplacianImage);
+
+  // Merge imto single vector.
+  for (int i = 0; i < LaplacianThreeDHist.size(); i++) {
+	colorThreeDhist.push_back(LaplacianThreeDHist[i]);
+  }
+
+  return colorThreeDhist;
 }
 
 

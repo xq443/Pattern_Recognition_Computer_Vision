@@ -40,19 +40,19 @@ std::vector<float> multiHistogram(cv::Mat &src, int bins = 8);
 //  */
 // std::vector<float> multiHistogramLeftRight(cv::Mat &src, int bins = 8);
 
-// /*
-//  * Computes a multi 3D-histogram by taking the gradient magnitude for a given image.
-//  * Arg1: src -> source image for which histogram needs to be constructed.
-//  * Arg2: bins -> Number to bins to quantize.
-//  */
-// std::vector<float> colorTexture(cv::Mat &src);
+/*
+ * Computes a multi 3D-histogram by taking the gradient magnitude for a given image.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number to bins to quantize.
+ */
+std::vector<float> colorTexture(cv::Mat &src);
 
 // /*
 //  * Computes a multi 3D-histogram for a given Image one for image and another by applying gradient magnitude on it.
 //  * Arg1: src -> source image for which histogram needs to be constructed.
 //  * Arg2: bins -> Number to bins to quantize.
 //  */
-// std::vector<float> LaplaciancolorTexture(cv::Mat &src);
+std::vector<float> LaplaciancolorTexture(cv::Mat &src) 
 
 // /*
 //  * Thresholds the given Image in HSV format in such a way that, all yellow

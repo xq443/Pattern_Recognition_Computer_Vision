@@ -5,8 +5,8 @@
 #ifndef DISTANCE_METRIC_H
 #define DISTANCE_METRIC_H
 
-#include <vector>
-#include <string>
+// #include <vector>
+// #include <string>
 using namespace std;
 
 

@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <vector>
 #include "csv_util.h"
+#include "utils.h"
 #include "featureVector.h"
 #include "distanceMetric.h"
 
@@ -22,7 +23,7 @@ using namespace std;
  */
 int main(int argc, char *argv[]) {
     if (argc != 4) { // Expecting 3 arguments: feature set, image path, and number of matches.
-        cout << "Usage: ./image_matcher <feature_set> <target_image> <num_matches>" << endl;
+        cout << "Usage: ./topN <feature_set> <target_image> <num_matches>" << endl;
         exit(-1);
     }
 
@@ -41,7 +42,6 @@ int main(int argc, char *argv[]) {
     vector<float> targetImageFeatureVector;
 
 
-
     if (featureset == "square") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/featureVectors.csv");
         targetImageFeatureVector = sevenXSevenSquare(targetImage);
@@ -54,6 +54,12 @@ int main(int argc, char *argv[]) {
     } else if (featureset == "multiHist") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiHistFeaturevectors.csv");
         targetImageFeatureVector = multiHistogram(targetImage);
+    } else if (featureset == "textureHist") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv");
+        targetImageFeatureVector = colorTexture(targetImage);
+    } else if (featureset == "laplacianHist") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv");
+        targetImageFeatureVector = LaplaciancolorTexture(targetImage);
     } else {
         cerr << "Error: Invalid feature set provided!" << endl;
         return -1;
@@ -73,35 +79,50 @@ int main(int argc, char *argv[]) {
         results = sum_of_squared_difference(targetImageFeatureVector, data, filenames);
         
         for (int i = 0; i < no_of_matches; i++) {
-        cout << results[i].first << ":" << results[i].second << endl;
-        cv::imshow(results[i].first, cv::imread(results[i].first));
+            cout << results[i].first << ":" << results[i].second << endl;
+            cv::imshow(results[i].first, cv::imread(results[i].first));
         }
     } else if (featureset=="hist2D") {
         cout << "Matching hist2d";
         results2 = histogram_intersection(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
-        cout << results2[i].first << ":" << results2[i].second << endl;
-        cv::imshow(results2[i].first, cv::imread(results2[i].first));
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
         }
     } else if (featureset=="hist3D") {
         cout << "Matching hist3d";
         results2 = histogram_intersection(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
-        cout << results2[i].first << ":" << results2[i].second << endl;
-        cv::imshow(results2[i].first, cv::imread(results2[i].first));
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
         }
     } else if (featureset=="multiHist") {
         cout << "Matching top bottom hist";
         results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
-        cout << results2[i].first << ":" << results2[i].second << endl;
-        cv::imshow(results2[i].first, cv::imread(results2[i].first));
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
         }
-    }
-
+    } else if (featureset=="textureHist") {
+        cout << "Matching texture and color hist";
+        results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        }
+    } else if (featureset=="laplacianHist") {
+        cout << "Matching laplacian hist";
+        results2 = entopyDistance(targetImageFeatureVector, data, filenames);
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        }
+    } 
     // Wait for key press
     if (cv::waitKey(0) == 'q') {
         for (int i = 0; i < no_of_matches; i++) {

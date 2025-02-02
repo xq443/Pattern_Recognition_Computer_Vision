@@ -76,7 +76,10 @@ int main(int argc, char *argv[]) {
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/hist3DfeatureVector.csv";
 	    char filename_multihistogram[256] =
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiHistFeaturevectors.csv";
-
+      char filename_texturehistogram[256] =
+		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv";
+      char filename_multihistGaussian[256] =
+		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv";
 
       if (featureType=="square") {
         featureVector = sevenXSevenSquare(src); // compute the feature vector.
@@ -90,8 +93,13 @@ int main(int argc, char *argv[]) {
       } else if (featureType=="multiHist") {
         featureVector = multiHistogram(src);
         append_image_data_csv(filename_multihistogram, buffer, featureVector, 0);
+      } else if (featureType=="textureHist") {
+        featureVector = colorTexture(src);
+		    append_image_data_csv(filename_texturehistogram, buffer, featureVector, 0);
+      } else if (featureType=="LaplacianHist") {
+		    featureVector = LaplaciancolorTexture(src);
+		    append_image_data_csv(filename_multihistLaplacian, buffer, featureVector, 0);
       }
-  }
   }
   printf("Terminating\n");
 

@@ -112,26 +112,40 @@ int sobelY3X3(cv::Mat &src, cv::Mat &dst) {
  * sy: Short sobely Filter generated Image.
  * dst: Destination Container where the Image will be stored.
  */
+
 int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
   dst = cv::Mat::zeros(sx.rows, sx.cols, CV_8UC3);
 
   // loop through rows.
   for (int i = 0; i < sx.rows; i++) {
-	// create a rowpointer for each of sx, sy, dst.
-	cv::Vec3s *sxrptr = sx.ptr<cv::Vec3s>(i);
-	cv::Vec3s *syrptr = sy.ptr<cv::Vec3s>(i);
-	cv::Vec3b *dstrptr = dst.ptr<cv::Vec3b>(i);
+    // create row pointers for sx, sy, dst
+    cv::Vec3s *sxrptr = sx.ptr<cv::Vec3s>(i);
+    cv::Vec3s *syrptr = sy.ptr<cv::Vec3s>(i);
+    cv::Vec3b *dstrptr = dst.ptr<cv::Vec3b>(i);
 
-	// loop through columns.
-	for (int j = 0; j < sx.cols; j++) {
-	  // loop through colour channles.
-	  for (int c = 0; c < 3; c++) {
-		dstrptr[j][c] = sqrt((sxrptr[j][c]*sxrptr[j][c]) + (syrptr[j][c]*syrptr[j][c]));
-	  }
-	}
+    // loop through columns.
+    for (int j = 0; j < sx.cols; j++) {
+      // loop through color channels.
+      for (int c = 0; c < 3; c++) {
+        // Calculate gradient magnitude
+        float mag = sqrt((sxrptr[j][c] * sxrptr[j][c]) + (syrptr[j][c] * syrptr[j][c]));
+        
+        // Clamp the value to the 0-255 range
+        dstrptr[j][c] = cv::saturate_cast<uchar>(mag);
+      }
+    }
   }
-  return (0);
+  return 0;
 }
+
+
+/*
+ * Computes a multi 3D-histogram for a given Image: one for the image and another by applying gradient magnitude on it.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number of bins to quantize.
+ */
+
+
 
 /*
  * Function to do Laplacian Filter on an given Image.
