@@ -52,16 +52,16 @@ std::vector<float> colorTexture(cv::Mat &src);
 //  * Arg1: src -> source image for which histogram needs to be constructed.
 //  * Arg2: bins -> Number to bins to quantize.
 //  */
-std::vector<float> LaplaciancolorTexture(cv::Mat &src) 
+std::vector<float> LaplaciancolorTexture(cv::Mat &src);
 
 // /*
 //  * Thresholds the given Image in HSV format in such a way that, all yellow
 //  * pixels are whitened.
 //  */
-// std::vector<float> yellowThresholding(cv::Mat &src);
+std::vector<float> yellowThresholding(cv::Mat &src);
 
 // /*
 //  *  Thresholds the given Image in HSV format in such a way that, all blue
 //  * pixels are whitened.
 //  */
-// std::vector<float> blueThresholding(cv::Mat &src);
+std::vector<float> blueThresholding(cv::Mat &src);

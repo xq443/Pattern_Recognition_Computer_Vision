@@ -31,6 +31,6 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst);
  * src: Source Image on which laplacian Filter must be applied.
  * dst: Destination container to store the Filtered Image.
  */
-// int laplacianFilter(cv::Mat &src, cv::Mat &dst);
+int laplacianFilter(cv::Mat &src, cv::Mat &dst);
 
-int gaussianFilter(cv::Mat &src, cv::Mat &dst);
+// int gaussianFilter(cv::Mat &src, cv::Mat &dst);

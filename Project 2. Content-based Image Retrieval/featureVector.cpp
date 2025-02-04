@@ -41,7 +41,7 @@ vector<float> sevenXSevenSquare(cv::Mat &src) {
 
     // Loop through the 7x7 window centered at (center_row, center_col)
     for (int col = center_col - 3; col <= center_col + 3; col++) {
-        for (int c = 0; c < 2; c++) { // Only using first two color channels
+        for (int c = 0; c < 3; c++) { // Only using first two color channels
             featureVector.push_back(rptr[col][c]);
             featureVector.push_back(rptrp1[col][c]);
             featureVector.push_back(rptrp2[col][c]);

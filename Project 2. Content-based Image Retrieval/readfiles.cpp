@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiHistFeaturevectors.csv";
       char filename_texturehistogram[256] =
 		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv";
-      char filename_multihistGaussian[256] =
+      char filename_multihistLaplacian[256] =
 		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv";
 
       if (featureType=="square") {
@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
 		    featureVector = LaplaciancolorTexture(src);
 		    append_image_data_csv(filename_multihistLaplacian, buffer, featureVector, 0);
       }
+  }
   }
   printf("Terminating\n");
 
