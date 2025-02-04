@@ -53,6 +53,7 @@ std::vector<float> colorTexture(cv::Mat &src);
 //  * Arg2: bins -> Number to bins to quantize.
 //  */
 std::vector<float> LaplaciancolorTexture(cv::Mat &src);
+std::vector<float> extractFeatureVector(const char *targetFilename, const char *featuresFile);
 
 // /*
 //  * Thresholds the given Image in HSV format in such a way that, all yellow

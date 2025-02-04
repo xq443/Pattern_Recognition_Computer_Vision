@@ -2,13 +2,16 @@
   Xujia Qin 30th Jan, 2025
   S21
 */
-
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <opencv2/opencv.hpp>
 #include "featureVector.h"
-#include <vector>
 #include "utils.h"
 #include <cmath>
+#include <vector>
+#include <string>
+#include <cstring> // For strcmp
 
 using namespace std;
 
@@ -270,6 +273,52 @@ vector<float> LaplaciancolorTexture(cv::Mat &src) {
   }
 
   return colorThreeDhist;
+}
+
+
+// Function to split a string by a delimiter
+vector<string> split(const string &s, char delimiter) {
+    vector<string> tokens;
+    string token;
+    istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+// Function to extract the feature vector for a target image
+vector<float> extractFeatureVector(const char *targetFilename, const char *featuresFile) {
+    vector<float> features;
+    ifstream file(featuresFile);
+    string line;
+
+    if (!file.is_open()) {
+        cerr << "Error: Could not open the features file!" << endl;
+        return features;
+    }
+
+    while (getline(file, line)) {
+        vector<string> tokens = split(line, ',');
+        string filename = tokens[0];
+
+        // Check if the current row corresponds to the target image
+        if (filename == targetFilename) {
+            // Extract the feature values
+            for (size_t i = 1; i < tokens.size(); ++i) {
+                features.push_back(stof(tokens[i]));
+            }
+            break; // Stop searching once the target image is found
+        }
+    }
+
+    file.close();
+
+    if (features.empty()) {
+        cerr << "Error: Target image not found in the features file!" << endl;
+    }
+
+    return features;
 }
 
 

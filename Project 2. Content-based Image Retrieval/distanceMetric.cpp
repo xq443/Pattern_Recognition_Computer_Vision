@@ -2,7 +2,7 @@
   Xujia Qin 30th Jan, 2025
   S21
 */
-
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -149,6 +149,40 @@ vector<pair<string, float>> entopyDistance(vector<float> &targetImageFeatures,
   sort(results.begin(), results.end(), cmp1);
   return results;
 }
+
+
+vector<pair<string, float>> cosine_distance(vector<float> &targetImageFeatures,
+                                             vector<vector<float>> &featuresData,
+                                             vector<char *> &filenames) {
+    vector<pair<string, float>> results;
+    
+    if (featuresData.empty() || targetImageFeatures.size() != featuresData[0].size()) {
+        cerr << "Error: Feature vector size mismatch!" << endl;
+        return results;
+    }
+    
+    for (size_t i = 0; i < featuresData.size(); i++) {
+        float dot_product = 0.0, norm_target = 0.0, norm_data = 0.0;
+        
+        for (size_t j = 0; j < featuresData[i].size(); j++) {
+            dot_product += targetImageFeatures[j] * featuresData[i][j];
+            norm_target += targetImageFeatures[j] * targetImageFeatures[j];
+            norm_data += featuresData[i][j] * featuresData[i][j];
+        }
+        
+        norm_target = sqrt(norm_target);
+        norm_data = sqrt(norm_data);
+        
+        float cosine_similarity = (norm_target > 0 && norm_data > 0) ? dot_product / (norm_target * norm_data) : 0;
+        float cosine_distance = 1 - cosine_similarity;
+        
+        results.emplace_back(filenames[i], cosine_distance);
+    }
+    
+    sort(results.begin(), results.end(), cmp1);
+    return results;
+}
+
 
 // functional test
 // int main() {

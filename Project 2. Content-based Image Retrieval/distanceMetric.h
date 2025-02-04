@@ -65,4 +65,8 @@ vector<pair<string, float>> entopyDistance(vector<float> &targetImageFeatures,
 										   vector<char *> &filenames);
 
 
+vector<pair<string, float>> cosine_distance(vector<float> &targetImageFeatures,
+                                             vector<vector<float>> &featuresData,
+                                             vector<char *> &filenames);
+
 #endif // DISTANCE_METRIC_H

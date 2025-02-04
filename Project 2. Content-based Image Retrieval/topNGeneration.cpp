@@ -60,6 +60,10 @@ int main(int argc, char *argv[]) {
     } else if (featureset == "laplacianHist") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv");
         targetImageFeatureVector = LaplaciancolorTexture(targetImage);
+    } else if (featureset == "ResNet18") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/ResNet18_olym.csv");
+        targetImageFeatureVector = extractFeatureVector(target_image_path, feature_vector_file);
+
     } else {
         cerr << "Error: Invalid feature set provided!" << endl;
         return -1;
@@ -117,6 +121,14 @@ int main(int argc, char *argv[]) {
     } else if (featureset=="laplacianHist") {
         cout << "Matching laplacian hist";
         results2 = entopyDistance(targetImageFeatureVector, data, filenames);
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        }
+    } else if (featureset=="ResNet18") {
+        cout << "Matching ResNet18";
+        results2 = cosine_distance(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
             cout << results2[i].first << ":" << results2[i].second << endl;
