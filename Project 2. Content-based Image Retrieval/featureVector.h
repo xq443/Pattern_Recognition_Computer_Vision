@@ -61,8 +61,6 @@ std::vector<float> extractFeatureVector(const char *targetFilename, const char *
 //  */
 std::vector<float> yellowThresholding(cv::Mat &src);
 
-// /*
-//  *  Thresholds the given Image in HSV format in such a way that, all blue
-//  * pixels are whitened.
-//  */
-std::vector<float> blueThresholding(cv::Mat &src);
+std::vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int bins, float depthThreshold);
+
+cv::Mat computeDepthMap(cv::Mat &src);

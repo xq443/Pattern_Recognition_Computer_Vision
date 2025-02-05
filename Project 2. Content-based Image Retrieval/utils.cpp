@@ -139,19 +139,9 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
 }
 
 
-/*
- * Computes a multi 3D-histogram for a given Image: one for the image and another by applying gradient magnitude on it.
- * Arg1: src -> source image for which histogram needs to be constructed.
- * Arg2: bins -> Number of bins to quantize.
- */
-
-
 
 /*
  * Function to do Laplacian Filter on an given Image.
- * [ 0   1  0 ]
- * [ -1  4   1]
- * [  0  -1   0]
  * src: Source Image on which laplacian Filter must be applied.
  * dst: Destination container to store the Filtered Image.
  */

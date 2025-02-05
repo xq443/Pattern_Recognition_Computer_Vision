@@ -13,8 +13,7 @@
 #include "utils.h"
 #include "featureVector.h"
 #include "distanceMetric.h"
-
-
+#include "DA2Network.hpp"
 using namespace std;
 
 /*
@@ -63,7 +62,9 @@ int main(int argc, char *argv[]) {
     } else if (featureset == "ResNet18") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/ResNet18_olym.csv");
         targetImageFeatureVector = extractFeatureVector(target_image_path, feature_vector_file);
-
+    } else if (featureset=="getbanana") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv");
+	    targetImageFeatureVector = yellowThresholding(targetImage);
     } else {
         cerr << "Error: Invalid feature set provided!" << endl;
         return -1;
@@ -81,7 +82,6 @@ int main(int argc, char *argv[]) {
 
     if (featureset == "square") {
         results = sum_of_squared_difference(targetImageFeatureVector, data, filenames);
-        
         for (int i = 0; i < no_of_matches; i++) {
             cout << results[i].first << ":" << results[i].second << endl;
             cv::imshow(results[i].first, cv::imread(results[i].first));
@@ -134,7 +134,52 @@ int main(int argc, char *argv[]) {
             cout << results2[i].first << ":" << results2[i].second << endl;
             cv::imshow(results2[i].first, cv::imread(results2[i].first));
         }
-    } 
+    } else if (featureset=="getbanana") {
+        cout << "Matching bananas";
+        results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        }
+    } else if (featureset == "DAV2") {
+        cout << "Matching DAV2";
+        // Load the target image
+        cv::Mat depthMap;
+        
+        // Generate depth map using DAV2 (Assume DAV2 generates depth map as 'xxx.jpg')
+        string depth_map_path = "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/DAV2_depthMap.jpg";
+        depthMap = cv::imread(depth_map_path, cv::IMREAD_GRAYSCALE); // Load as grayscale
+
+        if (depthMap.empty()) {
+            cerr << "Error: Unable to load depth map from " << depth_map_path << endl;
+            return -1;
+        }
+
+        // Compute depth-filtered feature vector (Set bins and depth threshold accordingly)
+        int bins = 16;         // Example bin size
+        float depthThreshold = 0.5; // Example threshold, adjust as needed
+
+        targetImageFeatureVector = depthFilteredMultiHistogram(targetImage, depthMap, bins, depthThreshold);
+
+        // strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/DAV2featureVector.csv");
+
+        // // Read stored feature vectors
+        // if (read_image_data_csv(feature_vector_file, filenames, data) != 0) {
+        //     cerr << "Error reading image data from CSV file: " << feature_vector_file << endl;
+        //     return -1;
+        // }
+
+        // Compute distances using histogram intersection
+        results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
+
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        }
+    }
+    
     // Wait for key press
     if (cv::waitKey(0) == 'q') {
         for (int i = 0; i < no_of_matches; i++) {

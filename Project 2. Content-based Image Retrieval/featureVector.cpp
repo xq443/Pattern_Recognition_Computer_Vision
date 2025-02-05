@@ -7,6 +7,7 @@
 #include <sstream>
 #include <opencv2/opencv.hpp>
 #include "featureVector.h"
+#include "DA2Network.hpp"
 #include "utils.h"
 #include <cmath>
 #include <vector>
@@ -259,6 +260,11 @@ vector<float> colorTexture(cv::Mat &src) {
  * Arg1: src -> source image for which histogram needs to be constructed.
  * Arg2: bins -> Number to bins to quantize.
  */
+/*
+ * Computes a multi 3D-histogram for a given Image one for image and another by applying gradient magnitude on it.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number to bins to quantize.
+ */
 vector<float> LaplaciancolorTexture(cv::Mat &src) {
   vector<float> colorThreeDhist = ThreedHistogram(src); // compute the 3D histogram for the whole image.
 
@@ -321,6 +327,214 @@ vector<float> extractFeatureVector(const char *targetFilename, const char *featu
     return features;
 }
 
+
+// Function to compute a multi histogram for a given image, using depth map to filter pixels
+vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int bins, float depthThreshold) {
+    vector<vector<vector<int>>> hist3d1(
+        bins + 1, vector<vector<int>>(bins + 1, vector<int>(bins + 1, 0)));
+    vector<float> result;
+    int bin_size = 255 / bins;
+    float total_pixels = 0.0;
+
+    // Top half
+    for (int i = 0; i <= src.rows / 2; i++) {
+        cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
+        float *dptr = depthMap.ptr<float>(i);
+        for (int j = 0; j < src.cols; j++) {
+            if (dptr[j] > depthThreshold) continue; // Skip pixels beyond the depth threshold
+
+            float blue = rptr[j][0];
+            float green = rptr[j][1];
+            float red = rptr[j][2];
+
+            int blue_index = blue / bin_size;
+            int green_index = green / bin_size;
+            int red_index = red / bin_size;
+
+            total_pixels++;
+            hist3d1[blue_index][green_index][red_index] += 1;
+        }
+    }
+
+    // Bottom half
+    vector<vector<vector<int>>> hist3d2(
+        bins + 1, vector<vector<int>>(bins + 1, vector<int>(bins + 1, 0)));
+
+    for (int i = (src.rows / 2) + 1; i < src.rows; i++) {
+        cv::Vec3b *rptr1 = src.ptr<cv::Vec3b>(i);
+        float *dptr1 = depthMap.ptr<float>(i);
+        for (int j = 0; j < src.cols; j++) {
+            if (dptr1[j] > depthThreshold) continue; // Skip pixels beyond the depth threshold
+
+            float blue = rptr1[j][0];
+            float green = rptr1[j][1];
+            float red = rptr1[j][2];
+
+            int blue_index = blue / bin_size;
+            int green_index = green / bin_size;
+            int red_index = red / bin_size;
+
+            hist3d2[blue_index][green_index][red_index] += 1;
+            total_pixels++;
+        }
+    }
+
+    // Normalize and flatten the histograms
+    for (int i = 0; i < bins + 1; i++) {
+        for (int j = 0; j < bins + 1; j++) {
+            for (int k = 0; k < bins + 1; k++) {
+                result.push_back(hist3d1[i][j][k] / total_pixels);
+            }
+        }
+    }
+
+    for (int i = 0; i < bins + 1; i++) {
+        for (int j = 0; j < bins + 1; j++) {
+            for (int k = 0; k < bins + 1; k++) {
+                result.push_back(hist3d2[i][j][k] / total_pixels);
+            }
+        }
+    }
+
+    return result;
+}
+
+// Function to compute a depth map using the DA2Network
+cv::Mat computeDepthMap(cv::Mat &src) {
+    cv::Mat dst;
+    DA2Network da_net("model_fp16.onnx");
+
+    float scale_factor = 512.0 / (src.rows > src.cols ? src.cols : src.rows);
+    scale_factor = scale_factor > 1.0 ? 1.0 : scale_factor;
+
+    da_net.set_input(src, scale_factor);
+    da_net.run_network(dst, src.size());
+
+    dst = dst * 5.0; // Scale depth values by 5
+    return dst;
+}
+
+
+/*
+ * Function to compute 3D Historgram for a given HSV image.
+ */
+
+vector<float> HSVHistogram(cv::Mat &src) {
+  // Define the number of bins for each channel.
+  int hueBins = 30, satBins = 32, ValBins = 32;
+  int total_pixels = hueBins*satBins*ValBins;
+  vector<float> result;
+  for (int i = 0; i < total_pixels; i++) {
+	result.push_back(0);
+  }
+
+  // Iterate over rows.
+  for (int i = 0; i < src.rows; i++) {
+	for (int j = 0; j < src.cols; j++) {
+	  cv::Vec3b value = src.at<cv::Vec3b>(i, j);
+	  // compute the indexes for each channel.
+	  float h = value[0];
+	  float s = value[1];
+	  float v = value[2];
+
+	  int hue_idx = floor((h/180)*hueBins);
+	  int sat_idx = floor((s/256)*satBins);
+	  int val_idx = floor((v/256)*ValBins);
+
+	  int result_idx = hue_idx*satBins*ValBins + sat_idx*ValBins + val_idx;
+	  result[result_idx] += 1;
+	}
+  }
+
+  // Normalize the histogram.
+  for (int i = 0; i < result.size(); i++) {
+	result[i] = result[i]/total_pixels;
+  }
+  return result;
+}
+
+/*
+ * Thresholds the given Image in HSV format in such a way that, all yellow
+ * pixels are whitened.
+ */
+vector<float> yellowThresholding(cv::Mat &src) {
+  int center_row = src.rows/2;
+  int center_col = src.cols/2;
+  cv::Mat new_src = src(cv::Range(center_row - 50, center_row + 50), cv::Range(center_col - 50, center_col + 50));
+  cv::Mat HSVImg;
+  cv::cvtColor(new_src, HSVImg, cv::COLOR_BGR2HSV);
+  cv::Mat ThresholdImg = cv::Mat::zeros(HSVImg.rows, HSVImg.cols, CV_8UC3);
+  vector<float> result;
+  // perform thresholding and store it in Thresholding Mat object.
+  // Iterate through rows.
+  for (int i = 0; i < HSVImg.rows; i++) {
+	cv::Vec3b *rptr = HSVImg.ptr<cv::Vec3b>(i);
+	cv::Vec3b *dptr = ThresholdImg.ptr<cv::Vec3b>(i);
+	// Iterate through cols.
+	for (int j = 0; j < HSVImg.cols; j++) {
+	  // give the range of yellow color.
+	  int lowerHue = 20;
+	  int upperHue = 30;
+	  int lowerSaturation = 100;
+	  int upperSaturation = 255;
+	  int lowerValue = 100;
+	  int upperValue = 255;
+
+	  int hue = rptr[j][0];
+	  int sat = rptr[j][1];
+	  int val = rptr[j][2];
+
+	  if ((hue >= lowerHue && hue <= upperHue) && (sat >= lowerSaturation && sat <= upperSaturation)
+		  && (val >= lowerValue && val <= upperValue)) {
+		dptr[j][0] = 30;
+		dptr[j][1] = 254;
+		dptr[j][2] = 254;
+	  }
+	}
+  }
+  result = HSVHistogram(ThresholdImg);
+  return result;
+}
+
+/*
+ *  Thresholds the given Image in HSV format in such a way that, all blue
+ * pixels are whitened.
+ */
+vector<float> blueThresholding(cv::Mat &src) {
+  cv::Mat HSVImg;
+  cv::cvtColor(src, HSVImg, cv::COLOR_BGR2HSV);
+  cv::Mat ThresholdImg = cv::Mat::zeros(HSVImg.rows, HSVImg.cols, CV_8UC3);
+  vector<float> result;
+  // perform thresholding and store it in Thresholding Mat object.
+  // Iterate through rows.
+  for (int i = 0; i < HSVImg.rows; i++) {
+	cv::Vec3b *rptr = HSVImg.ptr<cv::Vec3b>(i);
+	cv::Vec3b *dptr = ThresholdImg.ptr<cv::Vec3b>(i);
+	// Iterate through cols.
+	for (int j = 0; j < HSVImg.cols; j++) {
+	  // give the range of yellow color.
+	  int lowerHue = 219;
+	  int upperHue = 250;
+	  int lowerSaturation = 92;
+	  int upperSaturation = 94;
+	  int lowerValue = 94;
+	  int upperValue = 97;
+
+	  int hue = rptr[j][0];
+	  int sat = rptr[j][1];
+	  int val = rptr[j][2];
+
+	  if ((hue >= lowerHue && hue <= upperHue) && (sat >= lowerSaturation && sat <= upperSaturation)
+		  && (val >= lowerValue && val <= upperValue)) {
+		dptr[j][0] = 30;
+		dptr[j][1] = 254;
+		dptr[j][2] = 254;
+	  }
+	}
+  }
+  result = HSVHistogram(ThresholdImg);
+  return result;
+}
 
 // int main() {
 //     // Load an image (modify the path as needed)

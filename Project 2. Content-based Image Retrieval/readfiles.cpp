@@ -80,6 +80,10 @@ int main(int argc, char *argv[]) {
 		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv";
       char filename_multihistLaplacian[256] =
 		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv";
+      char filename_yellowThresholding[256] =
+		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv";
+	    char filename_blueThresholding[256] =
+		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/blueFeatureVector.csv";
 
       if (featureType=="square") {
         featureVector = sevenXSevenSquare(src); // compute the feature vector.
@@ -99,6 +103,13 @@ int main(int argc, char *argv[]) {
       } else if (featureType=="LaplacianHist") {
 		    featureVector = LaplaciancolorTexture(src);
 		    append_image_data_csv(filename_multihistLaplacian, buffer, featureVector, 0);
+      } else if (featureType=="yellowThresholding") {
+        featureVector = yellowThresholding(src);
+        cout << "appending data";
+        append_image_data_csv(filename_yellowThresholding, buffer, featureVector, 0);
+      } else if (featureType=="blueThresholding") {
+        featureVector = blueThresholding(src);
+        append_image_data_csv(filename_blueThresholding, buffer, featureVector, 0);
       }
   }
   }
