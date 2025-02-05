@@ -184,6 +184,34 @@ vector<pair<string, float>> cosine_distance(vector<float> &targetImageFeatures,
 }
 
 
+vector<pair<string, float>> chi_square_distance(vector<float> &targetImageFeatures,
+                                             vector<vector<float>> &featuresData,
+                                             vector<char *> &filenames) {
+    vector<pair<string, float>> results;
+    
+    if (featuresData.empty() || targetImageFeatures.size() != featuresData[0].size()) {
+        cerr << "Error: Feature vector size mismatch!" << endl;
+        return results;
+    }
+    
+    for (size_t i = 0; i < featuresData.size(); i++) {
+        float chi_square_dist = 0.0;
+        
+        for (size_t j = 0; j < featuresData[i].size(); j++) {
+            float numerator = pow(targetImageFeatures[j] - featuresData[i][j], 2);
+            float denominator = targetImageFeatures[j] + featuresData[i][j] + 1e-10; // Avoid division by zero
+            chi_square_dist += numerator / denominator;
+        }
+        
+        results.emplace_back(filenames[i], chi_square_dist);
+    }
+    
+    sort(results.begin(), results.end(), cmp1);
+    return results;
+}
+
+
+
 // functional test
 // int main() {
 //     // List of image filenames

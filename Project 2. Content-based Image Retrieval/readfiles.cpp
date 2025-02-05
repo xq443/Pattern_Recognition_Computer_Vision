@@ -77,13 +77,13 @@ int main(int argc, char *argv[]) {
 	    char filename_multihistogram[256] =
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiHistFeaturevectors.csv";
       char filename_texturehistogram[256] =
-		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv";
-      char filename_multihistLaplacian[256] =
-		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv";
+		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/textureHistogram.csv";
+      char filename_laplacianHist[256] =
+		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/laplacianHistFeatures.csv";
       char filename_yellowThresholding[256] =
-		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv";
-	    char filename_blueThresholding[256] =
-		  "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/blueFeatureVector.csv";
+		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv";
+	    char filename_openCVEmbedding[256] =
+		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/embeddings.csv";
 
       if (featureType=="square") {
         featureVector = sevenXSevenSquare(src); // compute the feature vector.
@@ -100,17 +100,18 @@ int main(int argc, char *argv[]) {
       } else if (featureType=="textureHist") {
         featureVector = colorTexture(src);
 		    append_image_data_csv(filename_texturehistogram, buffer, featureVector, 0);
-      } else if (featureType=="LaplacianHist") {
+      } else if (featureType=="laplacianHist") {
 		    featureVector = LaplaciancolorTexture(src);
-		    append_image_data_csv(filename_multihistLaplacian, buffer, featureVector, 0);
+		    append_image_data_csv(filename_laplacianHist, buffer, featureVector, 0);
       } else if (featureType=="yellowThresholding") {
         featureVector = yellowThresholding(src);
         cout << "appending data";
         append_image_data_csv(filename_yellowThresholding, buffer, featureVector, 0);
-      } else if (featureType=="blueThresholding") {
-        featureVector = blueThresholding(src);
-        append_image_data_csv(filename_blueThresholding, buffer, featureVector, 0);
-      }
+      } else if (featureType=="OpenCVDNN") {
+        featureVector = openCVEmbedding(src, 1);
+        cout << "appending data";
+        append_image_data_csv(filename_openCVEmbedding, buffer, featureVector, 0);
+      } 
   }
   }
   printf("Terminating\n");

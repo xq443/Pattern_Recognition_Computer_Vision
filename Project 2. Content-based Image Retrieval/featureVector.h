@@ -4,6 +4,8 @@
   S21
 */
 
+#include <cstdio>
+#include "opencv2/dnn.hpp"     // DNN API include file
 #include <vector>
 
 /*
@@ -64,3 +66,5 @@ std::vector<float> yellowThresholding(cv::Mat &src);
 std::vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int bins, float depthThreshold);
 
 cv::Mat computeDepthMap(cv::Mat &src);
+std::vector<float> extractHOGFeatures(cv::Mat &src);
+std::vector<float> openCVEmbedding(cv::Mat &src, int debug);

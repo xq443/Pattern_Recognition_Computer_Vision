@@ -145,28 +145,37 @@ int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst) {
  * src: Source Image on which laplacian Filter must be applied.
  * dst: Destination container to store the Filtered Image.
  */
+
 int laplacianFilter(cv::Mat &src, cv::Mat &dst) {
-  // create a destination pointer with zeros
-  dst = cv::Mat::zeros(src.rows, src.cols, CV_8UC3);
+    if (src.empty() || src.type() != CV_8UC3) {
+        return -1; // Return error code for invalid input
+    }
 
-  //cv::Mat greyscaleimg;
-  //greyscale(src, greyscaleimg);
+    // Temporary destination matrix with signed 16-bit type to store negative values
+    cv::Mat temp = cv::Mat::zeros(src.size(), CV_16SC3);
 
-  // loop over rows.
-  for (int i = 1; i < src.rows - 1; i++) {
-	// row pointers.
-	cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
-	cv::Vec3b *rptrm1 = src.ptr<cv::Vec3b>(i - 1);
-	cv::Vec3b *rptrp1 = src.ptr<cv::Vec3b>(i + 1);
+    // Loop over rows (excluding the border pixels)
+    for (int i = 1; i < src.rows - 1; i++) {
+        // Row pointers
+        cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b *rptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b *rptrp1 = src.ptr<cv::Vec3b>(i + 1);
 
-	cv::Vec3b *dptr = dst.ptr<cv::Vec3b>(i);
-	// loop over columns.
-	for (int j = 1; j < src.cols - 1; j++) {
-	  // loop over channels.
-	  for (int c = 0; c < 3; c++) {
-		dptr[j][c] = (4*rptr[j][c] + -1*rptr[j + 1][c] + -1*rptr[j - 1][c] + -1*rptrp1[j][c] + -1*rptrm1[j][c])/6;
-	  }
-	}
-  }
-  return (0);
+        cv::Vec3s *dptr = temp.ptr<cv::Vec3s>(i); // 16-bit signed type
+
+        // Loop over columns
+        for (int j = 1; j < src.cols - 1; j++) {
+            // Apply Laplacian filter on each channel
+            for (int c = 0; c < 3; c++) {
+                dptr[j][c] = 4 * rptr[j][c]
+                           - rptr[j + 1][c] - rptr[j - 1][c]
+                           - rptrp1[j][c] - rptrm1[j][c];
+            }
+        }
+    }
+
+    // Convert to CV_8UC3 (absolute value scaling)
+    cv::convertScaleAbs(temp, dst);
+
+    return 0; // Return 0 to indicate success
 }

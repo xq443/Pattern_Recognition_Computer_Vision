@@ -13,6 +13,9 @@
 #include <vector>
 #include <string>
 #include <cstring> // For strcmp
+#include <cstdio>
+#include "opencv2/dnn.hpp"     // DNN API include file
+
 
 using namespace std;
 
@@ -64,7 +67,7 @@ vector<float> sevenXSevenSquare(cv::Mat &src) {
  * Arg1: src -> source image for which histogram needs to be constructed.
  * Arg2: bins -> Number to bins to quantize.
  */
-vector<float> twodHistogram(cv::Mat &src, int bins) {
+std::vector<float> twodHistogram(cv::Mat &src, int bins) {
   // Create a vector to store the count of colors in rg-chromaticity.
   int numPixels = src.rows * src.cols;
   vector<vector<float>> hist2d(bins, vector<float>(bins, 0));
@@ -255,16 +258,32 @@ vector<float> colorTexture(cv::Mat &src) {
   return colorThreeDHist;
 }
 
-/*
- * Computes a multi 3D-histogram for a given Image one for image and another by applying gradient magnitude on it.
- * Arg1: src -> source image for which histogram needs to be constructed.
- * Arg2: bins -> Number to bins to quantize.
- */
-/*
- * Computes a multi 3D-histogram for a given Image one for image and another by applying gradient magnitude on it.
- * Arg1: src -> source image for which histogram needs to be constructed.
- * Arg2: bins -> Number to bins to quantize.
- */
+// Function to extract HOG features from an image
+vector<float> extractHOGFeatures(cv::Mat &src) {
+    // Convert to grayscale
+    cv::Mat gray;
+    if (src.channels() == 3) {
+        cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+    } else {
+        gray = src.clone();
+    }
+
+    // Define HOG descriptor parameters
+    cv::HOGDescriptor hog(
+        cv::Size(64, 64), // Window size
+        cv::Size(16, 16), // Block size
+        cv::Size(8, 8),   // Block stride
+        cv::Size(8, 8),   // Cell size
+        9                 // Number of bins
+    );
+
+    vector<float> featureVector;
+    hog.compute(gray, featureVector);
+
+    return featureVector;
+}
+
+
 vector<float> LaplaciancolorTexture(cv::Mat &src) {
   vector<float> colorThreeDhist = ThreedHistogram(src); // compute the 3D histogram for the whole image.
 
@@ -280,7 +299,6 @@ vector<float> LaplaciancolorTexture(cv::Mat &src) {
 
   return colorThreeDhist;
 }
-
 
 // Function to split a string by a delimiter
 vector<string> split(const string &s, char delimiter) {
@@ -496,44 +514,33 @@ vector<float> yellowThresholding(cv::Mat &src) {
   return result;
 }
 
-/*
- *  Thresholds the given Image in HSV format in such a way that, all blue
- * pixels are whitened.
- */
-vector<float> blueThresholding(cv::Mat &src) {
-  cv::Mat HSVImg;
-  cv::cvtColor(src, HSVImg, cv::COLOR_BGR2HSV);
-  cv::Mat ThresholdImg = cv::Mat::zeros(HSVImg.rows, HSVImg.cols, CV_8UC3);
-  vector<float> result;
-  // perform thresholding and store it in Thresholding Mat object.
-  // Iterate through rows.
-  for (int i = 0; i < HSVImg.rows; i++) {
-	cv::Vec3b *rptr = HSVImg.ptr<cv::Vec3b>(i);
-	cv::Vec3b *dptr = ThresholdImg.ptr<cv::Vec3b>(i);
-	// Iterate through cols.
-	for (int j = 0; j < HSVImg.cols; j++) {
-	  // give the range of yellow color.
-	  int lowerHue = 219;
-	  int upperHue = 250;
-	  int lowerSaturation = 92;
-	  int upperSaturation = 94;
-	  int lowerValue = 94;
-	  int upperValue = 97;
 
-	  int hue = rptr[j][0];
-	  int sat = rptr[j][1];
-	  int val = rptr[j][2];
+vector<float> openCVEmbedding(cv::Mat &src, int debug) {
+    const int ORNet_size = 224;
 
-	  if ((hue >= lowerHue && hue <= upperHue) && (sat >= lowerSaturation && sat <= upperSaturation)
-		  && (val >= lowerValue && val <= upperValue)) {
-		dptr[j][0] = 30;
-		dptr[j][1] = 254;
-		dptr[j][2] = 254;
-	  }
-	}
-  }
-  result = HSVHistogram(ThresholdImg);
-  return result;
+    std::string modelPath = "resnet18-v2-7.onnx";
+
+    // Load the neural network model
+    cv::dnn::Net net = cv::dnn::readNet(modelPath);
+    cv::Mat blob;
+
+    // Normalize the image to match the model's input requirements
+    cv::dnn::blobFromImage(src, blob, (1.0 / 255.0) * (1 / 0.226), cv::Size(ORNet_size, ORNet_size),
+                           cv::Scalar(124, 116, 104), true, false, CV_32F);
+
+    net.setInput(blob);
+    cv::Mat embedding = net.forward("onnx_node!resnetv22_flatten0_reshape0"); // The name of the embedding layer
+
+    if (debug) {
+        cv::imshow("src", src);
+        std::cout << embedding << std::endl;
+        std::cout << embedding.rows << " " << embedding.cols << std::endl;
+        cv::waitKey(0);
+    }
+
+    // Convert the Mat to a vector
+    std::vector<float> featureVector(embedding.begin<float>(), embedding.end<float>());
+    return featureVector;
 }
 
 // int main() {

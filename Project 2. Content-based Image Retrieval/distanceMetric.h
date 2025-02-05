@@ -69,4 +69,8 @@ vector<pair<string, float>> cosine_distance(vector<float> &targetImageFeatures,
                                              vector<vector<float>> &featuresData,
                                              vector<char *> &filenames);
 
+
+vector<pair<string, float>> chi_square_distance(vector<float> &targetImageFeatures,
+                                             vector<vector<float>> &featuresData,
+                                             vector<char *> &filenames);
 #endif // DISTANCE_METRIC_H

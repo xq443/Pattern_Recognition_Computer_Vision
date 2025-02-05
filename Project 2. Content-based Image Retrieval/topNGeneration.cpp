@@ -62,13 +62,13 @@ int main(int argc, char *argv[]) {
     } else if (featureset == "ResNet18") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/ResNet18_olym.csv");
         targetImageFeatureVector = extractFeatureVector(target_image_path, feature_vector_file);
+    } else if (featureset== "OpenCVDNN") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/embeddings.csv");
+	    targetImageFeatureVector = openCVEmbedding(targetImage, 0);
     } else if (featureset=="getbanana") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv");
 	    targetImageFeatureVector = yellowThresholding(targetImage);
-    } else {
-        cerr << "Error: Invalid feature set provided!" << endl;
-        return -1;
-    }
+    } 
 
     // Read feature vector file
     if (read_image_data_csv(feature_vector_file, filenames, data) != 0) {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (featureset=="hist3D") {
         cout << "Matching hist3d";
-        results2 = histogram_intersection(targetImageFeatureVector, data, filenames);
+        results2 = chi_square_distance(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
             cout << results2[i].first << ":" << results2[i].second << endl;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (featureset=="laplacianHist") {
         cout << "Matching laplacian hist";
-        results2 = entopyDistance(targetImageFeatureVector, data, filenames);
+        results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
             cout << results2[i].first << ":" << results2[i].second << endl;
@@ -141,7 +141,16 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < no_of_matches; i++) {
             cout << results2[i].first << ":" << results2[i].second << endl;
             cv::imshow(results2[i].first, cv::imread(results2[i].first));
-        }
+        } 
+    } else if (featureset=="OpenCVDNN") {
+        cout << "Matching OpenCVDNN";
+        results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
+        cout << results2.size();
+        for (int i = 0; i < no_of_matches; i++) {
+            cout << results2[i].first << ":" << results2[i].second << endl;
+            cv::imshow(results2[i].first, cv::imread(results2[i].first));
+        } 
+
     } else if (featureset == "DAV2") {
         cout << "Matching DAV2";
         // Load the target image
