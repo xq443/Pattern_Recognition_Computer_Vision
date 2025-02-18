@@ -24,10 +24,20 @@ BINDIR = .
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rules for making various executables
-main: utils.o featureVector.o readfiles.o csv_util.o
+
+thres: threshold.o 
+	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)	
+
+dis: imgDisplay.o filters.o csv_utils.o distance_metrics.o
 	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 
-test: object_recognition.o
+training: training.o
+	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
+
+classify: classify.o
+	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
+
+new: new_features.o
 	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 	
 clean:
