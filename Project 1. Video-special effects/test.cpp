@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
             applySepiaToneWithVignette(frame, dstframe);
             cv::imshow("Video Display", dstframe);
             video.write(dstframe);
-        } else if (showq) {
+        } else if (showPencilSketch) {
             pencilSketch(frame, dstframe);
             cv::imshow("Video Display", frame);
             video.write(dstframe);

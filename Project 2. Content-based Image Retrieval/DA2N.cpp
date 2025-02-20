@@ -2,30 +2,13 @@
 #include <fstream>
 #include <sstream>
 #include <opencv2/opencv.hpp>
-#include "DA2Network.hpp"
-#include "featureVector.h"
-#include "utils.h"
 #include <cmath>
 #include <vector>
 #include <string>
 #include <cstring> // For strcmp
+#include <algorithm> // For std::min
 
 using namespace std;
-
-// Function to compute a depth map using the DA2Network
-cv::Mat computeDepthMap(cv::Mat &src) {
-    cv::Mat dst;
-    DA2Network da_net("model_fp16.onnx");
-
-    float scale_factor = 512.0 / (src.rows > src.cols ? src.cols : src.rows);
-    scale_factor = scale_factor > 1.0 ? 1.0 : scale_factor;
-
-    da_net.set_input(src, scale_factor);
-    da_net.run_network(dst, src.size());
-
-    dst = dst * 5.0; // Scale depth values by 5
-    return dst;
-}
 
 // Function to compute a multi 3D-histogram for a given image, using depth map to filter pixels
 vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int bins, float depthThreshold) {
@@ -35,10 +18,16 @@ vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int b
     int bin_size = 255 / bins;
     float total_pixels = 0.0;
 
+    // Ensure depthMap is valid and has the same size as src
+    if (src.size() != depthMap.size()) {
+        cout << "Error: Image size and depth map size do not match!" << endl;
+        exit(-1);
+    }
+
     // Top half
     for (int i = 0; i <= src.rows / 2; i++) {
-        cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
-        float *dptr = depthMap.ptr<float>(i);
+        const cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);  // rptr as const
+        const float *dptr = depthMap.ptr<float>(i);     // dptr as const
         for (int j = 0; j < src.cols; j++) {
             if (dptr[j] > depthThreshold) continue; // Skip pixels beyond the depth threshold
 
@@ -46,9 +35,14 @@ vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int b
             float green = rptr[j][1];
             float red = rptr[j][2];
 
-            int blue_index = blue / bin_size;
-            int green_index = green / bin_size;
-            int red_index = red / bin_size;
+            int blue_index = blue / (255 / bins);
+            int green_index = green / (255 / bins);
+            int red_index = red / (255 / bins);
+
+            // Ensure the indices are within valid bounds
+            blue_index = std::min(blue_index, bins);
+            green_index = std::min(green_index, bins);
+            red_index = std::min(red_index, bins);
 
             total_pixels++;
             hist3d1[blue_index][green_index][red_index] += 1;
@@ -60,8 +54,8 @@ vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int b
         bins + 1, vector<vector<int>>(bins + 1, vector<int>(bins + 1, 0)));
 
     for (int i = (src.rows / 2) + 1; i < src.rows; i++) {
-        cv::Vec3b *rptr1 = src.ptr<cv::Vec3b>(i);
-        float *dptr1 = depthMap.ptr<float>(i);
+        const cv::Vec3b *rptr1 = src.ptr<cv::Vec3b>(i);  // rptr1 as const
+        const float *dptr1 = depthMap.ptr<float>(i);     // dptr1 as const
         for (int j = 0; j < src.cols; j++) {
             if (dptr1[j] > depthThreshold) continue; // Skip pixels beyond the depth threshold
 
@@ -69,9 +63,14 @@ vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int b
             float green = rptr1[j][1];
             float red = rptr1[j][2];
 
-            int blue_index = blue / bin_size;
-            int green_index = green / bin_size;
-            int red_index = red / bin_size;
+            int blue_index = blue / (255 / bins);
+            int green_index = green / (255 / bins);
+            int red_index = red / (255 / bins);
+
+            // Ensure the indices are within valid bounds
+            blue_index = std::min(blue_index, bins);
+            green_index = std::min(green_index, bins);
+            red_index = std::min(red_index, bins);
 
             hist3d2[blue_index][green_index][red_index] += 1;
             total_pixels++;
@@ -98,31 +97,60 @@ vector<float> depthFilteredMultiHistogram(cv::Mat &src, cv::Mat &depthMap, int b
     return result;
 }
 
+
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Usage %s <image filename>\n", argv[0]);
+    if (argc < 3) {
+        printf("Usage %s <image filename> <depth map filename>\n", argv[0]);
         exit(-1);
     }
 
-    char filename[256];
+    char filename[256], depthMapFilename[256];
     strcpy(filename, argv[1]);
+    strcpy(depthMapFilename, argv[2]);
 
+    // Load the image
     cv::Mat src = cv::imread(filename);
-    if (src.data == NULL) {
+    if (src.empty()) {
         printf("Unable to read image %s\n", filename);
         exit(-1);
     }
 
-    cv::Mat depthMap = computeDepthMap(src);
-    float depthThreshold = 50.0;
+    // Load the depth map
+    cv::Mat depthMap = cv::imread(depthMapFilename, cv::IMREAD_UNCHANGED);
+    if (depthMap.empty()) {
+        printf("Unable to read depth map %s\n", depthMapFilename);
+        exit(-1);
+    }
 
+    // Debug output: Check image size
+    cout << "Image loaded: " << src.rows << "x" << src.cols << endl;
+    cout << "Depth map loaded: " << depthMap.rows << "x" << depthMap.cols << endl;
+
+    // Ensure depth map is single channel (grayscale) and convert if necessary
+    if (depthMap.channels() > 1) {
+        cv::cvtColor(depthMap, depthMap, cv::COLOR_BGR2GRAY);
+    }
+
+    // Normalize the depth map (if necessary, depending on the depth map format)
+    depthMap.convertTo(depthMap, CV_32F, 1.0 / 255.0);  // Scale to [0, 1] if needed
+
+    // Compute the feature vector using the depth map
+    float depthThreshold = 0.05;
     vector<float> featureVector = depthFilteredMultiHistogram(src, depthMap, 8, depthThreshold);
 
-    cout << "Feature Vector (size: " << featureVector.size() << "):" << endl;
-    for (size_t i = 0; i < featureVector.size(); i++) {
-        cout << featureVector[i] << " ";
-        if ((i + 1) % 8 == 0) cout << endl;
-    }
+    // Compute the weighted average
+    //float weighted_average = weightedAvg(featureVector);
+
+    // Save to CSV file
+    // ofstream outFile("output.csv", ios::app);  // Open file in append mode
+    // if (outFile.is_open()) {
+    //     outFile << filename << "," << weighted_average << endl;
+    //     outFile.close();
+    // } else {
+    //     cout << "Error opening CSV file for writing!" << endl;
+    // }
+
+   // cout << "Weighted Average: " << weighted_average << endl;
 
     return 0;
 }

@@ -1,3 +1,7 @@
+/**
+ * Xujia Qin 20th Feb, 2025
+ */
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
@@ -174,7 +178,7 @@ void trainObject(Mat &frame, const Mat &binary) {
 
 int main() {
     // Load the PNG image
-    Mat frame = imread("/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 3. Real-time 2-D Object Recognition/db/f4.png");  // Change the file path accordingly
+    Mat frame = imread("/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 3. Real-time 2-D Object Recognition/db/f5.png");  // Change the file path accordingly
     if (frame.empty()) {
         cerr << "Error: Cannot open image!" << endl;
         return -1;

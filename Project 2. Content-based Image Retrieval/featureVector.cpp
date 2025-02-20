@@ -543,6 +543,81 @@ vector<float> openCVEmbedding(cv::Mat &src, int debug) {
     return featureVector;
 }
 
+/*
+ * Computes a multi 3D-histogram for a given Image from left and right half of image.
+ * Arg1: src -> source image for which histogram needs to be constructed.
+ * Arg2: bins -> Number to bins to quantize.
+ */
+
+vector<float> multiHistogramLeftRight(cv::Mat &src, int bins) {
+  // create a 3D-vector to store the count of colors in rgb color space.
+  vector<vector<vector<int> > > hist3d1(
+	  bins + 1, vector<vector<int> >(bins + 1, vector<int>(bins + 1, 0)));
+  vector<float> result; // store the final normalized 3d-histogram as 1d-feature vector.
+  int bin_size = 255/8;
+  float total_pixels = 0.0;
+  // loop through rows.
+  for (int i = 0; i <= src.rows; i++) {
+	// create row pointer to access rows.
+	cv::Vec3b *rptr = src.ptr<cv::Vec3b>(i);
+	for (int j = 0; j < src.cols/2; j++) {
+	  float blue = rptr[j][0];
+	  float green = rptr[j][1];
+	  float red = rptr[j][2];
+
+	  int blue_index = blue/bin_size;
+	  int green_index = green/bin_size;
+	  int red_index = red/bin_size;
+
+	  total_pixels++;
+	  hist3d1[blue_index][green_index][red_index] += 1;
+	}
+  }
+  // bottom half
+  // create a 3D-vector to store the count of colors in rgb color space.
+  vector<vector<vector<int> > > hist3d2(
+	  bins + 1, vector<vector<int> >(bins + 1, vector<int>(bins + 1)));
+  // store the final normalized 3d-histogram as 1d-feature vector.
+
+  // loop through rows.
+  for (int i = 0; i < src.rows; i++) {
+	// create row pointer to access rows.
+	cv::Vec3b *rptr1 = src.ptr<cv::Vec3b>(i);
+	for (int j = (src.cols/2) + 1; j < src.cols; j++) {
+	  float blue = rptr1[j][0];
+	  float green = rptr1[j][1];
+	  float red = rptr1[j][2];
+
+	  int blue_index = blue/bin_size;
+	  int green_index = green/bin_size;
+	  int red_index = red/bin_size;
+
+	  //cout << blue << ":" << blue_index << "," << green << ":" << green_index << "," << red << ":" << red_index << endl;
+	  hist3d2[blue_index][green_index][red_index] += 1;
+	  total_pixels++;
+	}
+  }
+
+
+  // step-2.
+  for (int i = 0; i < bins + 1; i++) {
+	for (int j = 0; j < bins + 1; j++) {
+	  for (int k = 0; k < bins + 1; k++) {
+		result.push_back(hist3d1[i][j][k]/total_pixels);
+	  }
+	}
+  }
+
+  for (int i = 0; i < bins + 1; i++) {
+	for (int j = 0; j < bins + 1; j++) {
+	  for (int k = 0; k < bins + 1; k++) {
+		result.push_back(hist3d2[i][j][k]/total_pixels);
+	  }
+	}
+  }
+  return result;
+}
+
 // int main() {
 //     // Load an image (modify the path as needed)
 //     cv::Mat img = cv::imread("olympus/pic.0666.jpg");

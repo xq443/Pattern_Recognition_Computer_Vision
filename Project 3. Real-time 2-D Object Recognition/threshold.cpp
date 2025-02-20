@@ -1,3 +1,7 @@
+/**
+ * Xujia Qin 20th Feb, 2025
+ */
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
@@ -175,7 +179,7 @@ Mat analyzeConnectedComponents(const Mat &binaryImage, int minSize = 500) {
     return output;
 }
 
-// Function to compute region features (bounding box, centroid, moments)
+
 void computeRegionFeatures(const Mat &regionMap, int regionID, const string& imageName) {
     // Find connected components and stats
     Mat labels, stats, centroids;
@@ -206,10 +210,29 @@ void computeRegionFeatures(const Mat &regionMap, int regionID, const string& ima
     // Calculate the angle of the axis of least central moment
     double theta = 0.5 * atan2(2 * mu11, mu20 - mu02);
     
-    // Bounding box aspect ratio (width / height)
-    double boundingBoxRatio = static_cast<double>(width) / height;
+    // Rotate the region to align with the primary axis
+    Mat rotationMatrix = getRotationMatrix2D(Point2f(cx, cy), theta * 180 / CV_PI, 1.0);
+    Mat rotatedRegion;
+    warpAffine(regionMask, rotatedRegion, rotationMatrix, regionMask.size(), INTER_NEAREST);
 
-    // Percent filled (area vs bounding box area)
+    // Find the bounding box in the rotated space
+    vector<vector<Point>> contours;
+    findContours(rotatedRegion, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    Rect rotatedBoundingBox = boundingRect(contours[0]);
+
+    // Transform the bounding box corners back to the original coordinate system
+    vector<Point2f> boxCorners = {
+        Point2f(rotatedBoundingBox.tl()),
+        Point2f(rotatedBoundingBox.tl().x + rotatedBoundingBox.width, rotatedBoundingBox.tl().y),
+        Point2f(rotatedBoundingBox.br()),
+        Point2f(rotatedBoundingBox.tl().x, rotatedBoundingBox.tl().y + rotatedBoundingBox.height)
+    };
+    vector<Point2f> originalCorners;
+    invertAffineTransform(rotationMatrix, rotationMatrix);
+    transform(boxCorners, originalCorners, rotationMatrix);
+
+    // Calculate the bounding box aspect ratio and percent filled
+    double boundingBoxRatio = static_cast<double>(width) / height;
     double boundingBoxArea = static_cast<double>(width) * height;
     double percentFilled = static_cast<double>(area) / boundingBoxArea;
 
@@ -221,10 +244,12 @@ void computeRegionFeatures(const Mat &regionMap, int regionID, const string& ima
     cout << "  Percent Filled: " << percentFilled << endl;
     cout << "  Angle (axis of least central moment): " << theta * 180 / CV_PI << " degrees" << endl;
 
-    // Draw bounding box in RED with THICKER edges
+    // Draw the oriented bounding box
     Mat outputImage;
     cvtColor(regionMap, outputImage, COLOR_GRAY2BGR);  // Convert grayscale to BGR for color drawing
-    rectangle(outputImage, Point(x, y), Point(x + width, y + height), Scalar(0, 0, 255), 3); // Red bounding box
+    for (int i = 0; i < 4; ++i) {
+        line(outputImage, originalCorners[i], originalCorners[(i + 1) % 4], Scalar(0, 0, 255), 3); // Red bounding box
+    }
 
     // Draw centroid in GREEN
     circle(outputImage, Point(static_cast<int>(cx), static_cast<int>(cy)), 5, Scalar(0, 255, 0), -1);
@@ -247,10 +272,9 @@ void computeRegionFeatures(const Mat &regionMap, int regionID, const string& ima
     destroyAllWindows();
 }
 
-
 int main() {
     // Load image instead of capturing from webcam
-    Mat frame = imread("/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 3. Real-time 2-D Object Recognition/db/f2.png"); // Change "input.png" to your image file
+    Mat frame = imread("/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 3. Real-time 2-D Object Recognition/db/phone.png"); // Change "input.png" to your image file
     if (frame.empty()) {
         cerr << "Error: Cannot open image file!" << endl;
         return -1;
@@ -272,19 +296,18 @@ int main() {
     // Perform connected components analysis
     Mat regionMap = analyzeConnectedComponents(cleaned, 500);  // Minimum size set to 500
 
-    // imshow("Original Image", frame);
-    // imshow("Thresholded Image", binary);
-    // imshow("Opened Image", cleaned);
-    // imshow("Region Map", regionMap);
+    imshow("Original Image", frame);
+    imshow("Thresholded Image", binary);
+    imshow("Opened Image", cleaned);
+    imshow("Region Map", regionMap);
 
-    // // Save processed images
-    // imwrite("1_original.png", frame);
-    // imwrite("2_thresholded.png", binary);
-    // imwrite("3_opened.png", cleaned);
-    // imwrite("4_region_map.png", regionMap);
-    // cout << "All images saved successfully." << endl;
+    // Save processed images
+    imwrite("1_original.png", frame);
+    imwrite("2_thresholded.png", binary);
+    imwrite("3_opened.png", cleaned);
+    imwrite("4_region_map.png", regionMap);
+    cout << "All images saved successfully." << endl;
 
-    // Find and display regions
     Mat labels, stats, centroids;
     int numLabels = connectedComponentsWithStats(binary, labels, stats, centroids);
     for (int i = 1; i < min(numLabels, 20); i++) { // Iterate over detected regions

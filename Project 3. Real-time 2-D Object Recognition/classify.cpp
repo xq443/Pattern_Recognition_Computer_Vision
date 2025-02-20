@@ -1,3 +1,7 @@
+/**
+ * Xujia Qin 20th Feb, 2025
+ */
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -39,13 +43,45 @@ std::vector<float> computeStdDev(const std::vector<FeatureVector>& dataset) {
 }
 
 // Function to compute scaled Euclidean distance
-float computeDistance(const std::vector<float>& f1, const std::vector<float>& f2, const std::vector<float>& stddev) {
+float computeScaledEuclideanDistance(const std::vector<float>& f1, const std::vector<float>& f2, const std::vector<float>& stddev) {
     float distance = 0.0f;
     for (size_t i = 0; i < f1.size(); ++i) {
         float diff = (f1[i] - f2[i]) / stddev[i];
         distance += diff * diff;
     }
     return std::sqrt(distance);
+}
+
+// Function to compute Euclidean distance
+float computeEuclideanDistance(const std::vector<float>& f1, const std::vector<float>& f2) {
+    float distance = 0.0f;
+    for (size_t i = 0; i < f1.size(); ++i) {
+        float diff = f1[i] - f2[i];
+        distance += diff * diff;
+    }
+    return std::sqrt(distance);
+}
+
+// Function to compute Manhattan distance
+float computeManhattanDistance(const std::vector<float>& f1, const std::vector<float>& f2) {
+    float distance = 0.0f;
+    for (size_t i = 0; i < f1.size(); ++i) {
+        distance += std::abs(f1[i] - f2[i]);
+    }
+    return distance;
+}
+
+// Function to compute Chi-square distance
+float computeChiSquareDistance(const std::vector<float>& f1, const std::vector<float>& f2) {
+    float distance = 0.0f;
+    for (size_t i = 0; i < f1.size(); ++i) {
+        float diff = f1[i] - f2[i];
+        float sum = f1[i] + f2[i];
+        if (sum != 0) {
+            distance += (diff * diff) / sum;
+        }
+    }
+    return distance;
 }
 
 // Function to extract features from a new image
@@ -69,15 +105,14 @@ std::vector<float> extractFeatures(const std::string& imagePath) {
     float cy = m.m01 / m.m00;
     
     cv::Rect boundingBox = cv::boundingRect(contours[0]);
-    float boundingRatio = (float)boundingBox.width / boundingBox.height;
-    float percentFilled = (float)cv::contourArea(contours[0]) / (boundingBox.width * boundingBox.height);
-    float theta = 0.5 * std::atan2(2 * m.mu11, m.mu20 - m.mu02) * (180.0 / CV_PI);
+    float boundingRatio = static_cast<float>(boundingBox.width) / boundingBox.height;
+    float percentFilled = static_cast<float>(cv::contourArea(contours[0])) / (boundingBox.width * boundingBox.height);
 
-    return {cx, cy, boundingRatio, percentFilled, theta};
+    return {cx, cy, boundingRatio, percentFilled};
 }
 
-// Function to classify new image based on database
-std::string classifyImage(const std::string& imagePath, const std::string& dbPath) {
+// Function to classify new image based on database using different distance metrics
+std::string classifyImage(const std::string& imagePath, const std::string& dbPath, const std::string& distanceMetric) {
     std::ifstream file(dbPath);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open database file!" << std::endl;
@@ -107,7 +142,20 @@ std::string classifyImage(const std::string& imagePath, const std::string& dbPat
     std::string bestMatch;
     
     for (const auto& data : dataset) {
-        float distance = computeDistance(newImageFeatures, data.features, stddev);
+        float distance = 0.0f;
+        if (distanceMetric == "scaled_euclidean") {
+            distance = computeScaledEuclideanDistance(newImageFeatures, data.features, stddev);
+        } else if (distanceMetric == "euclidean") {
+            distance = computeEuclideanDistance(newImageFeatures, data.features);
+        } else if (distanceMetric == "manhattan") {
+            distance = computeManhattanDistance(newImageFeatures, data.features);
+        } else if (distanceMetric == "chi_square") {
+            distance = computeChiSquareDistance(newImageFeatures, data.features);
+        } else {
+            std::cerr << "Error: Unknown distance metric!" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        
         if (distance < minDistance) {
             minDistance = distance;
             bestMatch = data.label;
@@ -118,15 +166,16 @@ std::string classifyImage(const std::string& imagePath, const std::string& dbPat
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <image_path> <db_path>" << std::endl;
+    if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " <image_path> <db_path> <distance_metric>" << std::endl;
         return EXIT_FAILURE;
     }
     
     std::string imagePath = argv[1];
     std::string dbPath = argv[2];
+    std::string distanceMetric = argv[3];
     
-    std::string resultLabel = classifyImage(imagePath, dbPath);
+    std::string resultLabel = classifyImage(imagePath, dbPath, distanceMetric);
     std::cout << "Predicted Label: " << resultLabel << std::endl;
     
     // Load the image and display it with the label

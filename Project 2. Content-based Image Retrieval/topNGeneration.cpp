@@ -68,7 +68,28 @@ int main(int argc, char *argv[]) {
     } else if (featureset=="getbanana") {
         strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv");
 	    targetImageFeatureVector = yellowThresholding(targetImage);
-    } 
+    } else if (featureset=="LRHistorgam") {
+        strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiLRHist.csv");
+	    targetImageFeatureVector = multiHistogramLeftRight(targetImage, 16);
+
+    }
+    // } else if (featureset == "DAV2") {
+    //     cv::Mat depthMap;
+    //     // Compute the depth map using the target image
+    //     depthMap = computeDepthMap(targetImage);
+
+    //     // Ensure depthMap was computed correctly
+    //     if (depthMap.empty()) {
+    //         cerr << "Error: Unable to compute depth map." << endl;
+    //         return -1;
+    //     }
+
+    //     // Compute depth-filtered multi-histogram (Set bins and depth threshold accordingly)
+    //     int bins = 16;         // Example bin size
+    //     float depthThreshold = 0.5; // Example threshold, adjust as needed
+
+    //     targetImageFeatureVector = depthFilteredMultiHistogram(targetImage, depthMap, bins, depthThreshold);
+    
 
     // Read feature vector file
     if (read_image_data_csv(feature_vector_file, filenames, data) != 0) {
@@ -151,43 +172,26 @@ int main(int argc, char *argv[]) {
             cv::imshow(results2[i].first, cv::imread(results2[i].first));
         } 
 
-    } else if (featureset == "DAV2") {
-        cout << "Matching DAV2";
-        // Load the target image
-        cv::Mat depthMap;
-        
-        // Generate depth map using DAV2 (Assume DAV2 generates depth map as 'xxx.jpg')
-        string depth_map_path = "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/DAV2_depthMap.jpg";
-        depthMap = cv::imread(depth_map_path, cv::IMREAD_GRAYSCALE); // Load as grayscale
-
-        if (depthMap.empty()) {
-            cerr << "Error: Unable to load depth map from " << depth_map_path << endl;
-            return -1;
-        }
-
-        // Compute depth-filtered feature vector (Set bins and depth threshold accordingly)
-        int bins = 16;         // Example bin size
-        float depthThreshold = 0.5; // Example threshold, adjust as needed
-
-        targetImageFeatureVector = depthFilteredMultiHistogram(targetImage, depthMap, bins, depthThreshold);
-
-        // strcpy(feature_vector_file, "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/DAV2featureVector.csv");
-
-        // // Read stored feature vectors
-        // if (read_image_data_csv(feature_vector_file, filenames, data) != 0) {
-        //     cerr << "Error reading image data from CSV file: " << feature_vector_file << endl;
-        //     return -1;
-        // }
-
-        // Compute distances using histogram intersection
+    } else if (featureset=="LRHistorgam") {
+        cout << "Matching LRHistorgam";
         results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
-
         cout << results2.size();
         for (int i = 0; i < no_of_matches; i++) {
             cout << results2[i].first << ":" << results2[i].second << endl;
             cv::imshow(results2[i].first, cv::imread(results2[i].first));
-        }
+        } 
     }
+    // } else if (featureset == "DAV2") {
+    //     cout << "Matching DAV2";
+    //     // Compute distances using histogram intersection
+    //     results2 = histogram_intersection_for_2histograms(targetImageFeatureVector, data, filenames);
+
+    //     cout << results2.size();
+    //     for (int i = 0; i < no_of_matches; i++) {
+    //         cout << results2[i].first << ":" << results2[i].second << endl;
+    //         cv::imshow(results2[i].first, cv::imread(results2[i].first));
+    //     }
+    // }
     
     // Wait for key press
     if (cv::waitKey(0) == 'q') {

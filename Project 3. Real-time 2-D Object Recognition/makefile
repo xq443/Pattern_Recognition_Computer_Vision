@@ -39,6 +39,11 @@ classify: classify.o
 
 new: new_features.o
 	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
+resnet: resnet.o
+	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
+
+knn: knnClassify.o 
+	$(CC) $^ -o $(BINDIR)/$@ $(LDFLAGS) $(LDLIBS)
 	
 clean:
 	rm -f *.o *~

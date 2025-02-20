@@ -50,16 +50,6 @@ vector<pair<string, int>> sum_of_squared_difference(vector<float> &targetImageFe
     return results;
 }
 
-/*
- * Function that computes the histogram_intersection distance for all the images in the database,
- * and returns the distances as pair of vector with (filename, distance) in sorted order.
-
-      Arg1: targetImageFeature: A vector that has the features of target Image.
-      Arg2: featuresData: A 2 dimensional vector containing features of all Images in dataset.
-      Arg3: filenames: A vector containing paths of all the image in database.
-
-      returns a sorted vector with (filename, distance) pairs.
- */
 vector<pair<string, float>> histogram_intersection(vector<float> &targetImageFeatures,
 												   vector<vector<float>> &featuresData, vector<char *> &filenames) {
   vector<pair<string, float>> results;
@@ -79,16 +69,6 @@ vector<pair<string, float>> histogram_intersection(vector<float> &targetImageFea
 
 }
 
-/*
- * Function that computes the histogram_intersection distance(for multiple histogram features) for all the images in the database,
- * and returns the distances as pair of vector with (filename, distance) in sorted order.
-
-      Arg1: targetImageFeature: A vector that has the features of target Image.
-      Arg2: featuresData: A 2 dimensional vector containing features of all Images in dataset.
-      Arg3: filenames: A vector containing paths of all the image in database.
-
-      returns a sorted vector with (filename, distance) pairs.
- */
 vector<pair<string, float>> histogram_intersection_for_2histograms(vector<float> &targetImageFeatures,
 																   vector<vector<float>> &featuresData,
 																   vector<char *> &filenames) {
@@ -102,48 +82,6 @@ vector<pair<string, float>> histogram_intersection_for_2histograms(vector<float>
 	  total_difference += difference;
 	}
 	results.push_back(make_pair(filenames[i], 2 - total_difference));
-  }
-  // Sort using comparator function
-  sort(results.begin(), results.end(), cmp1);
-  return results;
-}
-
-/*
- * Funtions that computes the entropy distance for all the images in the database with target Image.
- * and returns the distances as a pair of vector with (filename, distance) in sorted order.
-
-        Arg1: targetImageFeature: A vector that has the features of target Image.
-        Arg2: featuresData: A 2 dimensional vector containing features of all Images in dataset.
-        Arg3: filenames: A vector containing paths of all the image in database.
-
-        returns a sorted vector with (filename, distance) pairs.
- */
-vector<pair<string, float>> entopyDistance(vector<float> &targetImageFeatures,
-										   vector<vector<float>> &featuresData,
-										   vector<char *> &filenames) {
-  vector<pair<string, float>> results;
-  for (int i = 0; i < featuresData.size(); i++) {
-	float total_entropy1 = 0.0;
-	float total_entropy2 = 0.0;
-	// loop through columsn.
-	for (int j = 0; j < featuresData[i].size(); j++) {
-	  float curr_probability1 = 0.0;
-	  float curr_probablity2 = 0.0; // computing pi * log(pi) for target and matching image.
-	  if (targetImageFeatures[j]!=0) {
-		curr_probability1 = (targetImageFeatures[j])*(::log(targetImageFeatures[j]));
-	  }
-	  if (featuresData[i][j]!=0) {
-		curr_probablity2 = (featuresData[i][j])*(::log(featuresData[i][j]));
-	  }
-
-	  //cout << curr_probability1 << "," << curr_probablity2;
-	  // incrememt total entropy by current probability.
-	  total_entropy1 += curr_probability1;
-	  total_entropy2 += curr_probablity2;
-	}
-	float entropy_difference = (-1*total_entropy1) - (-1*total_entropy2);
-	//cout << entropy_difference << endl;
-	results.push_back(make_pair(filenames[i], entropy_difference));
   }
   // Sort using comparator function
   sort(results.begin(), results.end(), cmp1);

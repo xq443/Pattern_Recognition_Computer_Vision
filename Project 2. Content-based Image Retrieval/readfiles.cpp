@@ -84,6 +84,8 @@ int main(int argc, char *argv[]) {
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/yellowFeatureVector.csv";
 	    char filename_openCVEmbedding[256] =
 		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/embeddings.csv";
+	    char filename_multiLRHist[256] =
+		    "/Users/cathyqin/Desktop/Pattern_Recognition_Computer_Vision/Project 2. Content-based Image Retrieval/multiLRHist.csvs";
 
       if (featureType=="square") {
         featureVector = sevenXSevenSquare(src); // compute the feature vector.
@@ -111,6 +113,10 @@ int main(int argc, char *argv[]) {
         featureVector = openCVEmbedding(src, 1);
         cout << "appending data";
         append_image_data_csv(filename_openCVEmbedding, buffer, featureVector, 0);
+      } else if (featureType=="LRHistorgam") {
+        featureVector = multiHistogramLeftRight(src, 16);
+        cout << "appending data";
+        append_image_data_csv(filename_multiLRHist, buffer, featureVector, 0);
       } 
   }
   }
