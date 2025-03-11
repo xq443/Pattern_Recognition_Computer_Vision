@@ -1,0 +1,29 @@
+# Project 3: Real-time 2-D Object Recognition
+
+- Name: Xujia Qin
+- Links/URLs to any videos: https://drive.google.com/file/d/1xQVgOUGvn5uQ6kRlth3qM1lXgiTXWRIC/view?usp=drive_link
+- OS: macos
+- IDE: Visual Studio Code
+- Instructions for running your executables: 
+  - threshold
+    - make thres
+    - ./thres
+  - training
+    - make training
+    - ./training 
+  - classify
+    - make classify
+    - ./classify db/mouse_rotate3.png object_db.csv
+- Instructions for testing any extensions you completed.
+  - extension 1:
+    - make thres
+    - ./thres
+  - extension 2:
+    - make classify
+    - ./classify db/mouse.png object_db.csv manhattan
+    - ./classify db/mouse.png object_db.csv euclidean
+    - ./classify db/mouse.png object_db.csv chi_square
+  - extension 3:
+    - make resnet
+    - ./resnet
+- No travel days requested for this assignment
