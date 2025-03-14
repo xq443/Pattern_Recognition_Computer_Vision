@@ -1,29 +1,31 @@
-# Project 3: Real-time 2-D Object Recognition
+# Project 4: Calibration and Augmented Reality
 
 - Name: Xujia Qin
-- Links/URLs to any videos: https://drive.google.com/file/d/1xQVgOUGvn5uQ6kRlth3qM1lXgiTXWRIC/view?usp=drive_link
+- Date: 13th March, 2025
+- Links/URLs to any videos: https://drive.google.com/file/d/1O1Imv73y3Sq59AcuuVki8G3ydiXq1uBy/view?usp=sharing 
 - OS: macos
 - IDE: Visual Studio Code
 - Instructions for running your executables: 
-  - threshold
-    - make thres
-    - ./thres
-  - training
-    - make training
-    - ./training 
-  - classify
-    - make classify
-    - ./classify db/mouse_rotate3.png object_db.csv
+  - detect chessboard corners
+    - make t
+    - ./t
+  - calculate positions of the camera
+    - make c
+    - ./c
+  - virtual object
+    - make v
+    - ./v
+  - harris corner
+    - make h
+    - ./h
 - Instructions for testing any extensions you completed.
-  - extension 1:
-    - make thres
-    - ./thres
-  - extension 2:
-    - make classify
-    - ./classify db/mouse.png object_db.csv manhattan
-    - ./classify db/mouse.png object_db.csv euclidean
-    - ./classify db/mouse.png object_db.csv chi_square
-  - extension 3:
-    - make resnet
-    - ./resnet
+  - extension 1: 3d virtual
+    - make d
+    - ./d
+  - extension 2: testing with different cameras with the same program as task 1&2 
+    - make t
+    - ./t 
+  - extension 3: static picture
+    - make st
+    - ./st
 - No travel days requested for this assignment

@@ -1,3 +1,8 @@
+/*
+  Xujia Qin 
+  13th Mar, 2025
+  S21
+*/
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/opengl.hpp>
 #include <GL/glew.h>
@@ -7,121 +12,126 @@
 using namespace cv;
 using namespace std;
 
-// OpenGL cube vertices and colors
-GLfloat cubeVertices[] = {
-    -0.5f, -0.5f, -0.5f,   0.5f, -0.5f, -0.5f,   0.5f,  0.5f, -0.5f,  -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f,  0.5f,   0.5f, -0.5f,  0.5f,   0.5f,  0.5f,  0.5f,  -0.5f,  0.5f,  0.5f
-};
-GLuint cubeIndices[] = {
-    0, 1, 2, 2, 3, 0,  1, 5, 6, 6, 2, 1,
-    7, 6, 5, 5, 4, 7,  4, 0, 3, 3, 7, 4,
-    4, 5, 1, 1, 0, 4,  3, 2, 6, 6, 7, 3
-};
+Size boardSize(9, 6);
+float squareSize = 1.0;
+Mat camera_matrix, distortion_coefficients;
+GLuint textureID;
 
+void drawHouse() {
+    glBegin(GL_QUADS);
+    glColor3f(0.2f, 0.8f, 0.3f);
+    glVertex3f(1, 1, 0);
+    glVertex3f(4, 1, 0);
+    glVertex3f(4, 4, 0);
+    glVertex3f(1, 4, 0);
+    
+    glColor3f(0.6f, 0.2f, 0.2f);
+    glVertex3f(1, 1, 3);
+    glVertex3f(4, 1, 3);
+    glVertex3f(4, 4, 3);
+    glVertex3f(1, 4, 3);
+    glEnd();
+    
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.9f, 0.2f, 0.2f);
+    glVertex3f(1, 1, 3);
+    glVertex3f(4, 1, 3);
+    glVertex3f(2.5, 0.5, 5);
+    glVertex3f(1, 4, 3);
+    glVertex3f(4, 4, 3);
+    glVertex3f(2.5, 4.5, 5);
+    glEnd();
+}
 
-void renderCube(Mat &cameraMatrix, Mat &distCoeffs, Mat &rvec, Mat &tvec) {
-    // Convert rotation vector to matrix
-    Mat rotMat;
-    Rodrigues(rvec, rotMat);
-
-    // Construct OpenGL model-view matrix
-    GLfloat modelView[16] = {
-        static_cast<GLfloat>(rotMat.at<double>(0,0)), static_cast<GLfloat>(rotMat.at<double>(0,1)), static_cast<GLfloat>(rotMat.at<double>(0,2)), 0.0f,
-        static_cast<GLfloat>(rotMat.at<double>(1,0)), static_cast<GLfloat>(rotMat.at<double>(1,1)), static_cast<GLfloat>(rotMat.at<double>(1,2)), 0.0f,
-        static_cast<GLfloat>(rotMat.at<double>(2,0)), static_cast<GLfloat>(rotMat.at<double>(2,1)), static_cast<GLfloat>(rotMat.at<double>(2,2)), 0.0f,
-        static_cast<GLfloat>(tvec.at<double>(0)), static_cast<GLfloat>(tvec.at<double>(1)), static_cast<GLfloat>(tvec.at<double>(2)), 1.0f
-    };
-
-    // Apply transformations
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(modelView);
-
-    // Draw the cube
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, cubeVertices);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, cubeIndices);
-    glDisableClientState(GL_VERTEX_ARRAY);
+void drawBackground(Mat &frame) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.cols, frame.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, frame.data);
+    
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 1); glVertex2f(-1, -1);
+    glTexCoord2f(1, 1); glVertex2f(1, -1);
+    glTexCoord2f(1, 0); glVertex2f(1, 1);
+    glTexCoord2f(0, 0); glVertex2f(-1, 1);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
 }
 
 int main() {
-    // Initialize OpenCV
     VideoCapture cap(0);
     if (!cap.isOpened()) {
         cout << "Error: Could not open camera." << endl;
         return -1;
     }
-
-    // Load camera calibration
-    Mat cameraMatrix, distCoeffs;
+    
     FileStorage fs("camera_parameters.xml", FileStorage::READ);
     if (!fs.isOpened()) {
         cout << "Error: Could not open camera parameters file." << endl;
         return -1;
     }
-    fs["CameraMatrix"] >> cameraMatrix;
-    fs["DistortionCoefficients"] >> distCoeffs;
+    fs["CameraMatrix"] >> camera_matrix;
+    fs["DistortionCoefficients"] >> distortion_coefficients;
     fs.release();
-
-    // Initialize OpenGL
+    
     if (!glfwInit()) {
-        cout << "Error initializing GLFW" << endl;
+        cerr << "Failed to initialize GLFW!" << endl;
         return -1;
     }
-
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Augmented Reality with OpenGL", NULL, NULL);
+    
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Augmented Reality", NULL, NULL);
     if (!window) {
-        cout << "Error creating window" << endl;
+        cerr << "Failed to create GLFW window!" << endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
     glewInit();
-
-    // Set OpenGL settings
-    glEnable(GL_DEPTH_TEST);
-
-    Size boardSize(9, 6);
-    float squareSize = 1.0;
-
+    
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
     while (!glfwWindowShouldClose(window)) {
         Mat frame;
         cap >> frame;
         if (frame.empty()) break;
-
+        
         Mat gray;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
-
         vector<Point2f> corners;
         bool found = findChessboardCorners(gray, boardSize, corners);
-
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        drawBackground(frame);
+        
         if (found) {
+            cornerSubPix(gray, corners, Size(11, 11), Size(-1, -1), TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 30, 0.1));
             vector<Point3f> objectPoints;
-            for (int i = 0; i < boardSize.height; i++)
-                for (int j = 0; j < boardSize.width; j++)
+            for (int i = 0; i < boardSize.height; i++) {
+                for (int j = 0; j < boardSize.width; j++) {
                     objectPoints.push_back(Point3f(j * squareSize, i * squareSize, 0));
-
+                }
+            }
             Mat rvec, tvec;
-            solvePnP(objectPoints, corners, cameraMatrix, distCoeffs, rvec, tvec);
-
-            // OpenGL rendering
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            solvePnP(objectPoints, corners, camera_matrix, distortion_coefficients, rvec, tvec);
+            
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            gluPerspective(60.0, 640.0 / 480.0, 0.1, 100.0);
+            gluPerspective(45.0, 800.0 / 600.0, 0.1, 100.0);
+            
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
-
-            renderCube(cameraMatrix, distCoeffs, rvec, tvec);
-
-            glfwSwapBuffers(window);
+            gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
+            
+            glTranslatef(tvec.at<double>(0), tvec.at<double>(1), -tvec.at<double>(2));
+            drawHouse();
         }
-
-        imshow("Camera Feed", frame);
-        char key = waitKey(1);
-        if (key == 'q') break;
+        
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
-
+    
     cap.release();
     glfwDestroyWindow(window);
     glfwTerminate();
