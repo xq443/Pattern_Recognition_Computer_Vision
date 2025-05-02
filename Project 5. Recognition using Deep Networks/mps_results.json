@@ -1,0 +1,125 @@
+[
+  {
+    "params": {
+      "filters": [
+        16,
+        32
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 128,
+      "config_name": "small_fc128"
+    },
+    "accuracy": 0.902,
+    "params_count": 207018
+  },
+  {
+    "params": {
+      "filters": [
+        32,
+        64,
+        128
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 128,
+      "config_name": "medium_fc128"
+    },
+    "accuracy": 0.9075,
+    "params_count": 241994
+  },
+  {
+    "params": {
+      "filters": [
+        64,
+        128,
+        256
+      ],
+      "kernel_size": 5,
+      "dense_nodes": 128,
+      "config_name": "large_fc128"
+    },
+    "accuracy": 0.9175,
+    "params_count": 1323274
+  },
+  {
+    "params": {
+      "filters": [
+        16,
+        32
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 256,
+      "config_name": "small_fc256"
+    },
+    "accuracy": 0.91,
+    "params_count": 409130
+  },
+  {
+    "params": {
+      "filters": [
+        32,
+        64,
+        128
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 256,
+      "config_name": "medium_fc256"
+    },
+    "accuracy": 0.9095,
+    "params_count": 390858
+  },
+  {
+    "params": {
+      "filters": [
+        64,
+        128,
+        256
+      ],
+      "kernel_size": 5,
+      "dense_nodes": 256,
+      "config_name": "large_fc256"
+    },
+    "accuracy": 0.9195,
+    "params_count": 1619594
+  },
+  {
+    "params": {
+      "filters": [
+        16,
+        32
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 512,
+      "config_name": "small_fc512"
+    },
+    "accuracy": 0.9095,
+    "params_count": 813354
+  },
+  {
+    "params": {
+      "filters": [
+        32,
+        64,
+        128
+      ],
+      "kernel_size": 3,
+      "dense_nodes": 512,
+      "config_name": "medium_fc512"
+    },
+    "accuracy": 0.9155,
+    "params_count": 688586
+  },
+  {
+    "params": {
+      "filters": [
+        64,
+        128,
+        256
+      ],
+      "kernel_size": 5,
+      "dense_nodes": 512,
+      "config_name": "large_fc512"
+    },
+    "accuracy": 0.9165,
+    "params_count": 2212234
+  }
+]

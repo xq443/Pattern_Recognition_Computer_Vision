@@ -1,0 +1,35 @@
+# Project 5: Recognition using Deep Networks
+
+- Name: Xujia Qin
+- Date: 30th March, 2025
+- Travel Days: 3 days
+- Links/URLs to any videos: 
+    - https://drive.google.com/file/d/1C1BF-G9GISt6fKslLWgUjduQpCwrM9M_/view?usp=sharing 
+    - https://drive.google.com/file/d/1c7z7oo1n1R7th1PxDEFthwsTKRUDvGfR/view?usp=sharing 
+    - data folder: https://drive.google.com/drive/folders/1vnijXn2R7LdtpS4tszpsPh-Z9raOxVtN?usp=sharing 
+- OS: macos
+- IDE: Visual Studio Code
+- Instructions for running your executables: 
+  - get the 6 digits sample from the minst dataset
+    - python3 mnist_digits.py
+  - build & train the model
+    - python3 train_model.py
+  - run the network on the test set
+    - python3 test_model.py
+  - test the model on the new inputs
+    - python3 test_new_inputs.py
+  - analyze & visulize the first layer
+    - python3 vis_examine.py
+  - transfer learning
+    - python3 greek.py
+  - experiment with 3 dimensions
+    - python3 expl.py
+
+- Instructions for testing any extensions you completed.
+  - extension 1: experiment with 5 dimensions
+    - python3 exp.py
+  - extension 2: more greek letters
+    - python3 moregreek.py
+  - extension 3: resnet-18 layer
+    - python3 exten2.py
+- No travel days requested for this assignment
